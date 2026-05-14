@@ -1,7 +1,8 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import edicoes, materias
+from app.api.v1.endpoints import edicoes, materias, tasks
 
 api_router = APIRouter()
 
 api_router.include_router(edicoes.router, prefix="/edicoes", tags=["Edições"])
 api_router.include_router(materias.router, prefix="/materias", tags=["Matérias"])
+api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
