@@ -1,8 +1,7 @@
-from sqlalchemy import Index
-from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, ARRAY, JSON, DateTime
+from sqlalchemy import Index, Column, Integer, String, Date, Text, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.sql import func
-from datetime import datetime
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 
 Base = declarative_base()
 
@@ -61,15 +60,14 @@ class Materia(Base):
     orgao = Column(String(200), index=True)
     tipo_documental = Column(String(100), index=True)
 
-    # Entidades extraídas (JSONB)
-    entidades = Column(JSON)
-    # Exemplo: {"cpfs": [...], "cnpjs": [...], "valores": [...]}
+    # Entidades extraídas (JSONB para performance em queries)
+    entidades = Column(JSONB)
+
+    # Coluna para busca Full-Text (Português)
+    search_vector = Column(TSVECTOR)
 
     # URL original
     url = Column(String(500))
-
-    # Busca full-text (adicionar depois com migration)
-    # search_vector = Column(TSVECTOR)
 
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -82,8 +80,9 @@ class Materia(Base):
         return f"<Materia(id={self.id}, tipo={self.tipo_documental}, orgao={self.orgao})>"
 
 
-# Índices adicionais (criar via migration)
-
-# Índice composto para buscas comuns
+# Índices compostos
 Index('idx_materia_edicao_tipo', Materia.edicao_id, Materia.tipo_documental)
 Index('idx_materia_edicao_orgao', Materia.edicao_id, Materia.orgao)
+
+# Índice GIN para busca Full-Text
+Index('idx_materia_search_vector', Materia.search_vector, postgresql_using='gin')
