@@ -1,3 +1,4 @@
+from sqlalchemy.pool import AsyncAdaptedQueuePool
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool
 from app.core.config import settings
@@ -8,7 +9,10 @@ engine = create_async_engine(
     settings.database_url,
     echo=False,
     future=True,
-    poolclass=NullPool if settings.app_env == "test" else None,
+    poolclass=NullPool if settings.app_env == "test" else AsyncAdaptedQueuePool,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,
 )
 
 # Session factory
