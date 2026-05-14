@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from app.database.models import Edicao, Materia
 from typing import List, Optional
 from datetime import date
@@ -47,12 +47,16 @@ async def buscar_edicao_por_data(db: AsyncSession, data: date) -> Optional[Edica
     return result.scalar_one_or_none()
 
 
-async def listar_edicoes(db: AsyncSession, limit: int = 50) -> List[Edicao]:
-    """Listar últimas edições"""
+async def listar_edicoes(
+    db: AsyncSession,
+    limit: int = 50,
+    offset: int = 0
+) -> List[Edicao]:
     result = await db.execute(
         select(Edicao)
         .order_by(Edicao.data.desc())
         .limit(limit)
+        .offset(offset)
     )
     return result.scalars().all()
 
@@ -136,13 +140,33 @@ async def buscar_materias(
 
 
 async def atualizar_total_materias(db: AsyncSession, edicao_id: int):
-    """Atualizar contador de matérias da edição"""
-    result = await db.execute(
-        select(func.count(Materia.id)).where(Materia.edicao_id == edicao_id)
+    """Atualizar contador usando subquery"""
+    subquery = (
+        select(func.count(Materia.id))
+        .where(Materia.edicao_id == edicao_id)
+        .scalar_subquery()
     )
-    total = result.scalar()
 
-    result = await db.execute(select(Edicao).where(Edicao.id == edicao_id))
-    edicao = result.scalar_one()
-    edicao.total_materias = total
+    await db.execute(
+        update(Edicao)
+        .where(Edicao.id == edicao_id)
+        .values(total_materias=subquery)
+    )
     await db.commit()
+
+
+async def buscar_materias(
+    db: AsyncSession,
+    query: str,
+    limit: int = 20,
+    offset: int = 0
+) -> List[Materia]:
+    """Busca matérias usando Full-Text Search (Postgres)"""
+    result = await db.execute(
+        select(Materia)
+        .where(Materia.search_vector.op("@@")(func.to_tsquery('portuguese', query)))
+        .order_by(Materia.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    return result.scalars().all()
