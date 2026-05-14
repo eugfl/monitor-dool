@@ -1,0 +1,75 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+*.dist-info/
+build/
+dist/
+pip-wheel-metadata/
+.eggs/
+
+# ---- Virtualenv ----
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ---- Logs ----
+*.log
+logs/
+*.out
+
+# ---- Cache ----
+.cache/
+.pytest_cache/
+mypy_cache/
+pytest_cache/
+
+# ---- IDEs ----
+# PyCharm / IntelliJ
+.idea/
+*.iml
+
+# VSCode
+.vscode/
+
+# ---- OS files ----
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- Envs / config local ----
+.env
+*.env
+*.local
+
+# ---- Coverage ----
+.coverage
+.coverage.*
+htmlcov/
+
+# ---- Poetry ----
+.poetry/
+poetry.lock
+
+# ---- Pydantic / cache libs ----
+.pdm-python/
+
+# ---- Data ----
+data/
+analise_egba
