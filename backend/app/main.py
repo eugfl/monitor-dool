@@ -47,6 +47,13 @@ logger.add(
 logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
+# Filtro para ignorar spam do health check
+class HealthCheckFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.getMessage().find("GET /health HTTP") == -1
+
+logging.getLogger("uvicorn.access").addFilter(HealthCheckFilter())
+
 
 # =========================================================
 # LIFESPAN — Startup e shutdown da aplicação
