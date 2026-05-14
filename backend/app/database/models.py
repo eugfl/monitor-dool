@@ -1,0 +1,89 @@
+from sqlalchemy import Index
+from sqlalchemy import Column, Integer, String, Date, Text, ForeignKey, ARRAY, JSON, DateTime
+from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.sql import func
+from datetime import datetime
+
+Base = declarative_base()
+
+
+class Edicao(Base):
+    """Edição do Diário Oficial"""
+
+    __tablename__ = "edicoes"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Identificação da edição
+    numero = Column(Integer, nullable=False)
+    data = Column(Date, nullable=False, index=True)
+    tipo = Column(String(100))  # Ex: "Executivo", "Municipal"
+
+    # URLs e metadados
+    url_original = Column(String(500))
+    hash_conteudo = Column(String(64), unique=True)  # SHA256 do HTML
+
+    # Estatísticas
+    total_materias = Column(Integer, default=0)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relacionamento
+    materias = relationship(
+        "Materia", back_populates="edicao", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Edicao(id={self.id}, data={self.data}, numero={self.numero})>"
+
+
+class Materia(Base):
+    """Matéria/Publicação do diário oficial"""
+
+    __tablename__ = "materias"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Foreign Key
+    edicao_id = Column(Integer, ForeignKey(
+        "edicoes.id", ondelete="CASCADE"), index=True)
+
+    # Identificação original
+    materia_id_original = Column(
+        String(100), unique=True, index=True)  # ID do DOOL
+
+    # Conteúdo
+    titulo = Column(Text, nullable=False)
+    texto = Column(Text, nullable=False)
+
+    # Metadados extraídos
+    orgao = Column(String(200), index=True)
+    tipo_documental = Column(String(100), index=True)
+
+    # Entidades extraídas (JSONB)
+    entidades = Column(JSON)
+    # Exemplo: {"cpfs": [...], "cnpjs": [...], "valores": [...]}
+
+    # URL original
+    url = Column(String(500))
+
+    # Busca full-text (adicionar depois com migration)
+    # search_vector = Column(TSVECTOR)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relacionamento
+    edicao = relationship("Edicao", back_populates="materias")
+
+    def __repr__(self):
+        return f"<Materia(id={self.id}, tipo={self.tipo_documental}, orgao={self.orgao})>"
+
+
+# Índices adicionais (criar via migration)
+
+# Índice composto para buscas comuns
+Index('idx_materia_edicao_tipo', Materia.edicao_id, Materia.tipo_documental)
+Index('idx_materia_edicao_orgao', Materia.edicao_id, Materia.orgao)
