@@ -31,9 +31,10 @@ class Edicao(Base):
 
     # Relacionamento
     materias = relationship(
-        "Materia", back_populates="edicao", cascade="all, delete-orphan")
+        "Materia", back_populates="edicao", cascade="all, delete-orphan"
+    )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Edicao(id={self.id}, data={self.data}, numero={self.numero})>"
 
 
@@ -45,12 +46,14 @@ class Materia(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Foreign Key
-    edicao_id = Column(Integer, ForeignKey(
-        "edicoes.id", ondelete="CASCADE"), index=True)
+    edicao_id = Column(
+        Integer, ForeignKey("edicoes.id", ondelete="CASCADE"), index=True
+    )
 
     # Identificação original
     materia_id_original = Column(
-        String(100), unique=True, index=True)  # ID do DOOL
+        String(100), unique=True, index=True
+    )  # ID do DOOL
 
     # Conteúdo
     titulo = Column(Text, nullable=False)
@@ -76,13 +79,15 @@ class Materia(Base):
     # Relacionamento
     edicao = relationship("Edicao", back_populates="materias")
 
-    def __repr__(self):
+    __table_args__ = (
+        Index("idx_materia_edicao_tipo", "edicao_id", "tipo_documental"),
+        Index("idx_materia_edicao_orgao", "edicao_id", "orgao"),
+        Index(
+            "idx_materia_search_vector",
+            "search_vector",
+            postgresql_using="gin",
+        ),
+    )
+
+    def __repr__(self) -> str:
         return f"<Materia(id={self.id}, tipo={self.tipo_documental}, orgao={self.orgao})>"
-
-
-# Índices compostos
-Index('idx_materia_edicao_tipo', Materia.edicao_id, Materia.tipo_documental)
-Index('idx_materia_edicao_orgao', Materia.edicao_id, Materia.orgao)
-
-# Índice GIN para busca Full-Text
-Index('idx_materia_search_vector', Materia.search_vector, postgresql_using='gin')
