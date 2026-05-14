@@ -1,28 +1,31 @@
-import json
 import httpx
-from pathlib import Path
+from typing import Optional, Any
 from app.core.config import settings
+
+class DOOLApiError(Exception):
+    """Exceção customizada para erros da API do DOOL."""
+    pass
 
 class DOOLCollector:
     def __init__(self, client: httpx.AsyncClient):
         self.client = client
         self.base_url = settings.dool_base_url
 
-    async def buscar_edicao(self, data: str):
+    async def buscar_edicao(self, data: str) -> Optional[dict[str, Any]]:
         url = f"{self.base_url}/apifront/portal/edicoes/edicoes_from_data/{data}"
         response = await self.client.get(url)
         response.raise_for_status()
         dados = response.json()
 
         if dados.get("erro"):
-            raise Exception(dados["msg"])
+            raise DOOLApiError(dados["msg"])
 
         if not dados.get("itens"):
             return None
 
         return dados["itens"][0]
 
-    async def baixar_sumario(self, edicao_id: int):
+    async def baixar_sumario(self, edicao_id: int) -> str:
         url = f"{self.base_url}/html/{edicao_id}.html"
         response = await self.client.get(url)
         response.raise_for_status()
@@ -36,7 +39,7 @@ class DOOLCollector:
             
         return html
 
-    async def baixar_materia_html(self, materia_id: str):
+    async def baixar_materia_html(self, materia_id: str) -> str:
         url = f"{self.base_url}/apifront/portal/edicoes/publicacoes_ver_conteudo/{materia_id}"
         response = await self.client.get(url)
         response.raise_for_status()
