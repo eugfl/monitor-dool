@@ -8,7 +8,17 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 
 function App() {
-  const { stats, latestMaterias, edicoes, loading, refresh, currentPage } = useDashboard();
+  const { 
+    stats, 
+    latestMaterias, 
+    edicoes, 
+    loading, 
+    refresh, 
+    currentPage, 
+    availableOrgaos, 
+    availableTipos 
+  } = useDashboard();
+  
   const { filters, updateFilter, resetFilters } = useFilters();
 
   const handleApplyFilters = (page = 1) => {
@@ -63,6 +73,8 @@ function App() {
             updateFilter={updateFilter} 
             resetFilters={resetFilters}
             onApply={() => handleApplyFilters(1)}
+            availableOrgaos={availableOrgaos}
+            availableTipos={availableTipos}
           />
         </header>
 

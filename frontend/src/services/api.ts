@@ -36,10 +36,14 @@ export const MateriaService = {
     const response = await api.get<Materia>(`/materias/${id}`);
     return response.data;
   },
-  getStatsOrgaos: async (limit = 10) => {
+  getStatsOrgaos: async (limit = 20) => {
     const response = await api.get<StatsOrgao[]>('/materias/estatisticas/orgaos', {
       params: { limit },
     });
+    return response.data;
+  },
+  getStatsTipos: async () => {
+    const response = await api.get<StatsOrgao[]>('/materias/estatisticas/tipos');
     return response.data;
   },
 };

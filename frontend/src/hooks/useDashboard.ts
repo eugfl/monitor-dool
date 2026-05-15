@@ -7,6 +7,8 @@ export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [latestMaterias, setMaterias] = useState<Materia[]>([]);
   const [edicoes, setEdicoes] = useState<Edicao[]>([]);
+  const [availableOrgaos, setAvailableOrgaos] = useState<string[]>([]);
+  const [availableTipos, setAvailableTipos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,7 +17,6 @@ export function useDashboard() {
   const fetchDashboardData = useCallback(async (isInitial = false, filterState?: FilterState, page = 1) => {
     try {
       if (!isInitial) setLoading(true);
-      
       setError(null);
       
       const materiasParams = {
@@ -26,21 +27,32 @@ export function useDashboard() {
         tipo: filterState?.tipo !== 'all' ? filterState?.tipo : undefined,
       };
 
-      const [materiasRes, edicoesRes] = await Promise.all([
+      const [materiasRes, edicoesRes, orgaosStats, tiposStats] = await Promise.all([
         MateriaService.getMaterias(materiasParams),
-        EdicaoService.getEdicoes(5)
+        EdicaoService.getEdicoes(5),
+        MateriaService.getStatsOrgaos(30),
+        MateriaService.getStatsTipos()
       ]);
 
       setMaterias(materiasRes);
       setEdicoes(edicoesRes);
       setCurrentPage(page);
       
+      // Mapear órgãos e tipos únicos para os filtros
+      setAvailableOrgaos(orgaosStats.map(s => s.label).filter((v): v is string => !!v));
+      setAvailableTipos(tiposStats.map(s => s.label).filter((v): v is string => !!v));
+
+      // Calcular estatísticas reais baseadas nos tipos
+      const totalMaterias = tiposStats.reduce((acc, curr) => acc + curr.value, 0);
+      const nomeacoesCount = tiposStats.find(s => s.label === 'NOMEACAO' || s.label === 'NOMEAÇÃO')?.value || 0;
+      const editaisCount = tiposStats.find(s => s.label === 'EDITAL' || s.label === 'LICITACAO' || s.label === 'LICITAÇÃO')?.value || 0;
+
       setStats({
-        total_materias: materiasRes.length > 0 ? materiasRes[0].edicao_id * 10 : 484,
+        total_materias: totalMaterias,
         total_edicoes: edicoesRes.length,
-        total_orgaos: 12,
-        recent_nominations: 8,
-        recent_edicts: 15
+        total_orgaos: orgaosStats.length,
+        recent_nominations: nomeacoesCount,
+        recent_edicts: editaisCount
       });
       
     } catch (err) {
@@ -68,6 +80,8 @@ export function useDashboard() {
     stats,
     latestMaterias,
     edicoes,
+    availableOrgaos,
+    availableTipos,
     loading,
     error,
     currentPage,

@@ -17,9 +17,18 @@ interface FiltersProps {
   updateFilter: (key: keyof FilterState, value: string) => void;
   resetFilters: () => void;
   onApply: () => void;
+  availableOrgaos?: string[];
+  availableTipos?: string[];
 }
 
-export function Filters({ filters, updateFilter, resetFilters, onApply }: FiltersProps) {
+export function Filters({ 
+  filters, 
+  updateFilter, 
+  resetFilters, 
+  onApply,
+  availableOrgaos = [],
+  availableTipos = []
+}: FiltersProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
   const hasActiveFilters = filters.q !== '' || filters.orgao !== 'all' || filters.tipo !== 'all';
@@ -79,10 +88,9 @@ export function Filters({ filters, updateFilter, resetFilters, onApply }: Filter
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os órgãos</SelectItem>
-                    <SelectItem value="SEC. EDUCAÇÃO">Secretaria da Educação</SelectItem>
-                    <SelectItem value="SEC. SAÚDE">Secretaria da Saúde</SelectItem>
-                    <SelectItem value="CASA CIVIL">Casa Civil</SelectItem>
-                    <SelectItem value="SSP">Segurança Pública</SelectItem>
+                    {availableOrgaos.map(orgao => (
+                      <SelectItem key={orgao} value={orgao}>{orgao}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -96,10 +104,11 @@ export function Filters({ filters, updateFilter, resetFilters, onApply }: Filter
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os tipos</SelectItem>
-                    <SelectItem value="DECRETO">Decretos</SelectItem>
-                    <SelectItem value="NOMEAÇÃO">Nomeações</SelectItem>
-                    <SelectItem value="EDITAL">Editais</SelectItem>
-                    <SelectItem value="LICITAÇÃO">Licitações</SelectItem>
+                    {availableTipos.map(tipo => (
+                      <SelectItem key={tipo} value={tipo}>
+                        {tipo.charAt(0).toUpperCase() + tipo.slice(1).toLowerCase()}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
