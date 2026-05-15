@@ -73,3 +73,8 @@ poetry.lock
 # ---- Data ----
 data/
 analise_egba
+
+# ---- Frontend ----
+node_modules/
+dist/
+.eslintcache
