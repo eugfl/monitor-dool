@@ -1,16 +1,15 @@
 export interface Materia {
   id: number;
-  dool_id: string;
-  edicao_id: number;
+  materia_id_original: string;
   titulo: string;
   orgao: string | null;
-  tipo_documental: string | null;
-  resumo: string | null;
-  texto: string;
-  url_origem: string;
-  data_publicacao: string;
-  entidades: Record<string, any>;
-  hash_conteudo: string;
+  tipo_documental: string;
+  url: string | null;
+  created_at: string;
+  edicao_id?: number;
+  texto?: string;
+  entidades?: Record<string, any>;
+  updated_at?: string;
 }
 
 export interface Edicao {
@@ -25,8 +24,8 @@ export interface Edicao {
 }
 
 export interface StatsOrgao {
-  orgao: string;
-  count: number;
+  label: string;
+  value: number;
 }
 
 export interface DashboardStats {

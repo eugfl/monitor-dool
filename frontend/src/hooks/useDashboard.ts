@@ -9,15 +9,18 @@ export function useDashboard() {
   const [edicoes, setEdicoes] = useState<Edicao[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
-  const fetchDashboardData = useCallback(async (isInitial = false, filterState?: FilterState) => {
+  const fetchDashboardData = useCallback(async (isInitial = false, filterState?: FilterState, page = 1) => {
     try {
       if (!isInitial) setLoading(true);
       
       setError(null);
       
       const materiasParams = {
-        limit: 10,
+        limit: ITEMS_PER_PAGE,
+        offset: (page - 1) * ITEMS_PER_PAGE,
         q: filterState?.q || undefined,
         orgao: filterState?.orgao !== 'all' ? filterState?.orgao : undefined,
         tipo: filterState?.tipo !== 'all' ? filterState?.tipo : undefined,
@@ -30,6 +33,7 @@ export function useDashboard() {
 
       setMaterias(materiasRes);
       setEdicoes(edicoesRes);
+      setCurrentPage(page);
       
       setStats({
         total_materias: materiasRes.length > 0 ? materiasRes[0].edicao_id * 10 : 484,
@@ -66,6 +70,8 @@ export function useDashboard() {
     edicoes,
     loading,
     error,
-    refresh: (filters?: FilterState) => fetchDashboardData(false, filters)
+    currentPage,
+    itemsPerPage: ITEMS_PER_PAGE,
+    refresh: (filters?: FilterState, page?: number) => fetchDashboardData(false, filters, page || 1)
   };
 }
