@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { DashboardStats, Materia, Edicao } from '@/types';
+import type { FilterState } from './useFilters';
 import { MateriaService, EdicaoService } from '@/services/api';
 
 export function useDashboard() {
@@ -9,14 +10,21 @@ export function useDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDashboardData = useCallback(async (isInitial = false) => {
+  const fetchDashboardData = useCallback(async (isInitial = false, filterState?: FilterState) => {
     try {
       if (!isInitial) setLoading(true);
       
       setError(null);
       
+      const materiasParams = {
+        limit: 10,
+        q: filterState?.q || undefined,
+        orgao: filterState?.orgao !== 'all' ? filterState?.orgao : undefined,
+        tipo: filterState?.tipo !== 'all' ? filterState?.tipo : undefined,
+      };
+
       const [materiasRes, edicoesRes] = await Promise.all([
-        MateriaService.getMaterias({ limit: 10 }),
+        MateriaService.getMaterias(materiasParams),
         EdicaoService.getEdicoes(5)
       ]);
 
@@ -58,6 +66,6 @@ export function useDashboard() {
     edicoes,
     loading,
     error,
-    refresh: () => fetchDashboardData(false)
+    refresh: (filters?: FilterState) => fetchDashboardData(false, filters)
   };
 }

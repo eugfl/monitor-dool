@@ -1,30 +1,46 @@
 import { Layout } from '@/components/layout/Layout';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useFilters } from '@/hooks/useFilters';
+import { Filters } from '@/components/dashboard/Filters';
 import { motion } from 'framer-motion';
 
 function App() {
-  const { stats, latestMaterias, edicoes, loading } = useDashboard();
+  const { stats, latestMaterias, edicoes, loading, refresh } = useDashboard();
+  const { filters, updateFilter, resetFilters } = useFilters();
+
+  const handleApplyFilters = () => {
+    refresh(filters);
+  };
 
   return (
     <Layout>
       <main className="max-w-7xl mx-auto px-4 py-8 md:px-6 lg:px-8">
         {/* Header Section */}
-        <header className="mb-12 space-y-2">
-          <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-heading font-bold tracking-tight"
-          >
-            MONITOR <span className="text-primary">DOOL</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-muted-foreground text-lg"
-          >
-            Diário Oficial da Bahia • Busca inteligente • Insights • Timeline jurídica
-          </motion.p>
+        <header className="mb-12 space-y-4">
+          <div>
+            <motion.h1 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl md:text-5xl font-heading font-bold tracking-tight"
+            >
+              MONITOR <span className="text-primary">DOOL</span>
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-muted-foreground text-lg"
+            >
+              Diário Oficial da Bahia • Busca inteligente • Insights • Timeline jurídica
+            </motion.p>
+          </div>
+
+          <Filters 
+            filters={filters} 
+            updateFilter={updateFilter} 
+            resetFilters={resetFilters}
+            onApply={handleApplyFilters}
+          />
         </header>
 
         {/* Dashboard Content */}
