@@ -90,3 +90,23 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: hsl(var(--primary) / 0.25);
 }
+
+/* Materia Content Typography */
+.materia-content table {
+  @apply w-full border-collapse my-6 text-sm overflow-x-auto block md:table;
+}
+.materia-content th, .materia-content td {
+  @apply border border-border p-3 text-left;
+}
+.materia-content th {
+  @apply bg-muted font-bold;
+}
+.materia-content tr:nth-child(even) {
+  @apply bg-muted/30;
+}
+.materia-content p {
+  @apply mb-4 leading-relaxed;
+}
+.materia-content b, .materia-content strong {
+  @apply font-bold text-foreground;
+}
