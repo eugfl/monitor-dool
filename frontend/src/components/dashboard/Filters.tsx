@@ -113,19 +113,37 @@ export function Filters({
                 </Select>
               </div>
 
-              {/* Date Filter (Simplified for now) */}
+              {/* Date Filter */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Período</label>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 h-10 gap-2 border-muted-foreground/20 text-xs">
-                    <Calendar className="w-3 h-3" />
-                    Últimos 7 dias
-                  </Button>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Período de Publicação</label>
+                <div className="flex gap-2 items-center">
+                  <div className="relative flex-1">
+                    <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <input 
+                      type="date"
+                      className="w-full h-10 pl-8 pr-2 bg-card border border-input rounded-md text-xs focus:ring-1 focus:ring-primary outline-none"
+                      value={filters.data_inicio}
+                      onChange={(e) => updateFilter('data_inicio', e.target.value)}
+                    />
+                  </div>
+                  <span className="text-muted-foreground text-xs font-bold">até</span>
+                  <div className="relative flex-1">
+                    <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <input 
+                      type="date"
+                      className="w-full h-10 pl-8 pr-2 bg-card border border-input rounded-md text-xs focus:ring-1 focus:ring-primary outline-none"
+                      value={filters.data_fim}
+                      onChange={(e) => updateFilter('data_fim', e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="px-6 py-4 bg-muted/10 border-t flex justify-end gap-3">
+            <div className="px-6 py-4 bg-muted/10 border-t flex justify-between items-center gap-3">
+              <p className="text-[10px] text-muted-foreground italic">
+                * Caso a edição não exista no sistema, você poderá solicitar a coleta na busca.
+              </p>
               <Button 
                 variant="ghost" 
                 size="sm" 

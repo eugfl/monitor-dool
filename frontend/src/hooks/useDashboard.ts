@@ -25,6 +25,8 @@ export function useDashboard() {
         q: filterState?.q || undefined,
         orgao: filterState?.orgao !== 'all' ? filterState?.orgao : undefined,
         tipo: filterState?.tipo !== 'all' ? filterState?.tipo : undefined,
+        data_inicio: filterState?.data_inicio || undefined,
+        data_fim: filterState?.data_fim || undefined,
       };
 
       const [materiasRes, edicoesRes, orgaosStats, tiposStats] = await Promise.all([

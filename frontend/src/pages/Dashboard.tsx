@@ -2,10 +2,12 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useFilters } from '@/hooks/useFilters';
 import { Filters } from '@/components/dashboard/Filters';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Info, FileText, LayoutList, ShieldCheck, CalendarDays, ExternalLink, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, FileText, LayoutList, ShieldCheck, CalendarDays, ExternalLink, RefreshCw, SearchX, Database } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { MateriaService } from '@/services/api';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -21,10 +23,42 @@ export function Dashboard() {
   } = useDashboard();
   
   const { filters, updateFilter, resetFilters } = useFilters();
+  const [isCollecting, setIsCollecting] = useState(false);
+  const [collectionMsg, setCollectionMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const handleApplyFilters = (page = 1) => {
     refresh(filters, page);
   };
+
+  const handleTriggerColeta = async () => {
+    console.log("Button clicked! Date:", filters.data_inicio);
+    if (!filters.data_inicio) {
+      alert("A data inicial não está definida!");
+      return;
+    }
+    
+    setIsCollecting(true);
+    setCollectionMsg(null);
+    try {
+      console.log("Calling API...");
+      const res = await MateriaService.triggerColeta(filters.data_inicio, filters.data_fim);
+      console.log("API Success:", res);
+      setCollectionMsg({ type: 'success', text: res.message });
+      // Refresh after a delay to see if data appeared
+      setTimeout(() => refresh(filters), 5000);
+    } catch (err: any) {
+      console.error("API Error:", err);
+      setCollectionMsg({ 
+        type: 'error', 
+        text: err.response?.data?.detail || "Erro ao iniciar coleta. Verifique a data e tente novamente." 
+      });
+    } finally {
+      setIsCollecting(false);
+    }
+  };
+
+  const hasDateFilter = !!filters.data_inicio;
+
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1) return;
@@ -146,8 +180,62 @@ export function Dashboard() {
                     Consultando base de dados...
                   </div>
                 ) : latestMaterias.length === 0 ? (
-                  <div className="py-20 text-center text-muted-foreground italic">
-                    Nenhuma matéria encontrada para os filtros selecionados.
+                  <div className="py-20 text-center bg-muted/10 rounded-2xl border-2 border-dashed border-muted flex flex-col items-center gap-6 px-10">
+                    <div className="p-4 bg-muted/20 rounded-full">
+                      <SearchX className="w-10 h-10 text-muted-foreground" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-heading font-bold text-foreground">Nenhuma matéria encontrada</h3>
+                      <p className="text-muted-foreground max-w-md mx-auto">
+                        {hasDateFilter 
+                          ? `Não encontramos registros para o período de ${filters.data_inicio}${filters.data_fim ? ' até ' + filters.data_fim : ''}.`
+                          : "Tente ajustar seus filtros ou use palavras-chave diferentes."}
+                      </p>
+                    </div>
+                    
+                    {hasDateFilter && (
+                      <div className="pt-4 space-y-4 w-full max-w-sm">
+                        <button 
+                          type="button"
+                          className="w-full h-12 flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-primary/20 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+                          onClick={() => {
+                            console.log("WRAPPER CLICKED!");
+                            handleTriggerColeta();
+                          }}
+                          disabled={isCollecting}
+                        >
+                          {isCollecting ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              Iniciando Coleta...
+                            </div>
+                          ) : (
+                            <>
+                              <Database className="w-4 h-4" />
+                              Buscar diretamente no Diário Oficial
+                            </>
+                          )}
+                        </button>
+                        
+                        {collectionMsg && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`p-3 rounded-lg text-xs font-medium ${
+                              collectionMsg.type === 'success' ? 'bg-green-500/10 text-green-600 border border-green-200' : 'bg-red-500/10 text-red-600 border border-red-200'
+                            }`}
+                          >
+                            {collectionMsg.text}
+                          </motion.div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {!hasDateFilter && (
+                      <Button variant="outline" onClick={resetFilters}>
+                        Limpar Filtros
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   latestMaterias.map((materia, idx) => {
@@ -250,13 +338,12 @@ export function Dashboard() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-heading font-semibold flex items-center gap-2">
                   <CalendarDays className="w-4 h-4 text-primary" />
-                  Edições Recentes
+                  Últimas Edições
                 </h2>
-                <span className="text-[10px] font-bold text-muted-foreground uppercase">Top 5</span>
               </div>
               
               <div className="relative space-y-6 before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-px before:bg-border before:border-dashed">
-                {edicoes.slice(0, 5).map((edicao, idx) => (
+                {edicoes.slice(0, 3).map((edicao, idx) => (
                   <motion.div 
                     key={edicao.id}
                     initial={{ opacity: 0, x: 20 }}

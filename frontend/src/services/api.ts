@@ -25,11 +25,22 @@ export const MateriaService = {
     q?: string;
     orgao?: string;
     tipo?: string;
+    data_inicio?: string;
+    data_fim?: string;
     edicao_id?: number;
     limit?: number;
     offset?: number;
   }) => {
-    const response = await api.get<Materia[]>('/materias/', { params });
+    const hasFilters = params.q || params.orgao || params.tipo || params.data_inicio || params.data_fim;
+    const endpoint = hasFilters ? '/materias/search/' : '/materias/';
+    
+    const queryParams: any = { ...params };
+    if (queryParams.tipo) {
+      queryParams.tipo_documental = queryParams.tipo;
+      delete queryParams.tipo;
+    }
+
+    const response = await api.get<Materia[]>(endpoint, { params: queryParams });
     return response.data;
   },
   getMateria: async (id: number) => {
@@ -44,6 +55,11 @@ export const MateriaService = {
   },
   getStatsTipos: async () => {
     const response = await api.get<StatsOrgao[]>('/materias/estatisticas/tipos');
+    return response.data;
+  },
+  triggerColeta: async (data_inicio: string, data_fim?: string) => {
+    const params = data_fim ? { data_fim } : {};
+    const response = await api.post<{ message: string; status: string }>(`/tasks/coleta/${data_inicio}`, null, { params });
     return response.data;
   },
 };
