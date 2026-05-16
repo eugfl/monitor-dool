@@ -19,6 +19,7 @@ export function MateriaDetail() {
       try {
         const data = await MateriaService.getMateria(Number(id));
         setMateria(data);
+        document.title = `${data.titulo.slice(0, 40)}... | Monitor DOOL`;
       } catch (err) {
         console.error("Erro ao carregar matéria:", err);
       } finally {
