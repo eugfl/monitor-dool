@@ -1,16 +1,16 @@
 import { useDashboard } from '@/hooks/useDashboard';
 import { useFilters } from '@/hooks/useFilters';
 import { Filters } from '@/components/dashboard/Filters';
+import { MateriaCard } from '@/components/dashboard/MateriaCard';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Info, FileText, LayoutList, ShieldCheck, CalendarDays, ExternalLink, RefreshCw, SearchX, Database } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LayoutList, ShieldCheck, CalendarDays, ExternalLink, RefreshCw, SearchX, Database, FileText } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MateriaService } from '@/services/api';
+import { formatDateLong } from '@/utils/formatters';
 
 export function Dashboard() {
-  const navigate = useNavigate();
   const { 
     stats, 
     latestMaterias, 
@@ -26,28 +26,25 @@ export function Dashboard() {
   const [isCollecting, setIsCollecting] = useState(false);
   const [collectionMsg, setCollectionMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
+  useEffect(() => {
+    document.title = "Dashboard | Monitor DOOL";
+  }, []);
+
   const handleApplyFilters = (page = 1) => {
     refresh(filters, page);
   };
 
   const handleTriggerColeta = async () => {
-    console.log("Button clicked! Date:", filters.data_inicio);
-    if (!filters.data_inicio) {
-      alert("A data inicial não está definida!");
-      return;
-    }
+    if (!filters.data_inicio) return;
     
     setIsCollecting(true);
     setCollectionMsg(null);
     try {
-      console.log("Calling API...");
       const res = await MateriaService.triggerColeta(filters.data_inicio, filters.data_fim);
-      console.log("API Success:", res);
       setCollectionMsg({ type: 'success', text: res.message });
       // Refresh after a delay to see if data appeared
       setTimeout(() => refresh(filters), 5000);
     } catch (err: any) {
-      console.error("API Error:", err);
       setCollectionMsg({ 
         type: 'error', 
         text: err.response?.data?.detail || "Erro ao iniciar coleta. Verifique a data e tente novamente." 
@@ -238,65 +235,9 @@ export function Dashboard() {
                     )}
                   </div>
                 ) : (
-                  latestMaterias.map((materia, idx) => {
-                    const getReadableType = (type: string) => {
-                      const types: Record<string, { label: string, desc: string }> = {
-                        'DECRETO': { label: 'Decreto', desc: 'Ato normativo do Executivo' },
-                        'PORTARIA': { label: 'Portaria', desc: 'Instrução de serviço/órgão' },
-                        'EDITAL': { label: 'Edital', desc: 'Comunicação oficial/Resumo' },
-                        'LICITACAO': { label: 'Licitação', desc: 'Processo de compra pública' },
-                        'CONTRATO': { label: 'Contrato', desc: 'Acordo firmado' },
-                        'NOMEACAO': { label: 'Nomeação', desc: 'Provimento de cargo público' },
-                        'EXONERACAO': { label: 'Exoneração', desc: 'Desligamento de cargo' },
-                      };
-                      return types[type] || { 
-                        label: type.charAt(0).toUpperCase() + type.slice(1).toLowerCase(), 
-                        desc: 'Documento oficial' 
-                      };
-                    };
-
-                    const info = getReadableType(materia.tipo_documental);
-
-                    return (
-                      <motion.div 
-                        key={materia.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        onClick={() => navigate(`/materia/${materia.id}`)}
-                        className="p-5 border rounded-lg hover:border-primary/50 transition-all cursor-pointer group hover:shadow-md hover:shadow-primary/5 bg-card hover:bg-primary/[0.01]"
-                      >
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded cursor-pointer">
-                              {info.label}
-                            </span>
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium border-l pl-2">
-                              <Info className="w-3 h-3 text-primary/60" />
-                              <span>{info.desc}</span>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-medium text-muted-foreground">
-                            {new Date(materia.created_at).toLocaleDateString('pt-BR')}
-                          </span>
-                        </div>
-                        <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-2 text-sm md:text-base leading-snug">
-                          {materia.titulo}
-                        </h3>
-                        <div className="mt-4 flex items-center justify-between border-t pt-4 border-dashed">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-bold text-muted-foreground/90 flex items-center gap-1">
-                              <span className="text-primary opacity-60">🏛️</span> 
-                              {materia.orgao || 'Secretaria Geral'}
-                            </span>
-                          </div>
-                          <span className="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 cursor-pointer">
-                            Ver na Íntegra →
-                          </span>
-                        </div>
-                      </motion.div>
-                    );
-                  })
+                  latestMaterias.map((materia, idx) => (
+                    <MateriaCard key={materia.id} materia={materia} idx={idx} />
+                  ))
                 )}
               </div>
               
@@ -357,7 +298,7 @@ export function Dashboard() {
                     <div className="p-3 bg-muted/20 border border-transparent group-hover:border-primary/20 group-hover:bg-primary/[0.02] rounded-lg transition-all">
                       <p className="text-sm font-bold group-hover:text-primary transition-colors">Edição {edicao.numero}</p>
                       <p className="text-[11px] text-muted-foreground mb-2">
-                        {new Date(edicao.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                        {formatDateLong(edicao.data)}
                       </p>
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded">
