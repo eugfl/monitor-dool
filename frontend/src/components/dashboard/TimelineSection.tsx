@@ -10,6 +10,7 @@ interface TimelineSectionProps {
   loading: boolean;
   error: string | null;
   currentPage: number;
+  hasNextPage: boolean;
   filters: FilterState;
   hasDateFilter: boolean;
   hasActiveFilters: boolean;
@@ -26,6 +27,7 @@ export function TimelineSection({
   loading,
   error,
   currentPage,
+  hasNextPage,
   filters,
   hasDateFilter,
   hasActiveFilters,
@@ -48,7 +50,7 @@ export function TimelineSection({
         </span>
       </div>
 
-      <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto p-6">
+      <div className="timeline-scroll custom-scrollbar flex-1 space-y-4 overflow-y-auto p-6">
         {loading ? (
           <div className="py-20 text-center font-medium text-muted-foreground animate-pulse">
             Consultando base de dados...
@@ -92,7 +94,7 @@ export function TimelineSection({
           <Button
             variant="outline"
             size="sm"
-            disabled={materias.length < 10}
+            disabled={!hasNextPage}
             onClick={() => onPageChange(currentPage + 1)}
             className="h-9 gap-1 text-xs font-bold"
           >

@@ -11,8 +11,9 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
   const [availableTipos, setAvailableTipos] = useState<FilterOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const ITEMS_PER_PAGE = 50;
   const initialFiltersRef = useRef(initialFilters);
   const initialPageRef = useRef(initialPage);
 
@@ -22,7 +23,7 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
       setError(null);
 
       const materiasParams = {
-        limit: ITEMS_PER_PAGE,
+        limit: ITEMS_PER_PAGE + 1,
         offset: (page - 1) * ITEMS_PER_PAGE,
         q: filterState?.q || undefined,
         tipo: filterState?.tipo !== 'all' ? filterState?.tipo : undefined,
@@ -37,7 +38,8 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
         MateriaService.getDashboardSummary(),
       ]);
 
-      setMaterias(materiasRes);
+      setMaterias(materiasRes.slice(0, ITEMS_PER_PAGE));
+      setHasNextPage(materiasRes.length > ITEMS_PER_PAGE);
       setEdicoes(edicoesRes);
       setCurrentPage(page);
       setAvailableTipos(filterOptions.tipos);
@@ -66,6 +68,7 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
     loading,
     error,
     currentPage,
+    hasNextPage,
     itemsPerPage: ITEMS_PER_PAGE,
     refresh,
   };

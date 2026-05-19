@@ -82,14 +82,14 @@ export function Dashboard() {
     error,
     refresh,
     currentPage,
+    hasNextPage,
     availableTipos,
   } = useDashboard(initialFilters, initialPage);
 
-  const { filters, updateFilter, replaceFilters, resetFilters } = useFilters(initialFilters);
+  const { filters, updateFilter, replaceFilters } = useFilters(initialFilters);
   const [isCollecting, setIsCollecting] = useState(false);
   const filtersRef = useRef(filters);
   const currentPageRef = useRef(currentPage);
-  const skipNextUrlSync = useRef(false);
   const didRunSearchEffect = useRef(false);
   const didCheckTodayCollection = useRef(false);
   const lastErrorToastRef = useRef<string | null>(null);
@@ -126,16 +126,10 @@ export function Dashboard() {
   }, [currentPage]);
 
   const updateUrlState = useCallback((nextFilters: FilterState, page = 1, replace = false) => {
-    skipNextUrlSync.current = true;
     setSearchParams(buildDashboardSearchParams(nextFilters, page), { replace });
   }, [setSearchParams]);
 
   useEffect(() => {
-    if (skipNextUrlSync.current) {
-      skipNextUrlSync.current = false;
-      return;
-    }
-
     const nextFilters = getFiltersFromSearchParams(searchParams);
     const nextPage = getPageFromSearchParams(searchParams);
 
@@ -152,8 +146,7 @@ export function Dashboard() {
   const handleApplyFilters = useCallback((page = 1) => {
     const requestFilters = getRequestFilters(filtersRef.current);
     updateUrlState(requestFilters, page);
-    refresh(requestFilters, page);
-  }, [refresh, updateUrlState]);
+  }, [updateUrlState]);
 
   useEffect(() => {
     if (!didRunSearchEffect.current) {
@@ -161,10 +154,14 @@ export function Dashboard() {
       return;
     }
 
+    const currentQ = searchParams.get('q') || '';
+    if (debouncedSearch === currentQ) {
+      return;
+    }
+
     const nextFilters = getRequestFilters({ ...filtersRef.current, q: debouncedSearch });
     updateUrlState(nextFilters, 1, true);
-    refresh(nextFilters, 1);
-  }, [debouncedSearch, refresh, updateUrlState]);
+  }, [debouncedSearch, searchParams, updateUrlState]);
 
   const waitForCollectionStatus = useCallback(async (jobId: string) => {
     for (let attempt = 0; attempt < 30; attempt += 1) {
@@ -245,17 +242,14 @@ export function Dashboard() {
   };
 
   const handleResetFilters = () => {
-    resetFilters();
     updateUrlState(defaultFilters, 1);
-    refresh(defaultFilters, 1);
   };
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1) return;
     const requestFilters = getRequestFilters(filters);
     updateUrlState(requestFilters, newPage);
-    refresh(requestFilters, newPage);
-    document.querySelector('.custom-scrollbar')?.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('.timeline-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -283,6 +277,7 @@ export function Dashboard() {
         loading={loading}
         error={error}
         currentPage={currentPage}
+        hasNextPage={hasNextPage}
         filters={filters}
         hasDateFilter={hasDateFilter}
         hasActiveFilters={hasActiveFilters}
