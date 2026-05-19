@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { DashboardStats, Edicao, Materia } from '@/types';
+import type { DashboardStats, Edicao, FilterOption, Materia } from '@/types';
 import { EdicaoService, MateriaService, getApiErrorMessage } from '@/services/api';
 import type { FilterState } from './useFilters';
 
@@ -8,8 +8,8 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [latestMaterias, setMaterias] = useState<Materia[]>([]);
   const [edicoes, setEdicoes] = useState<Edicao[]>([]);
-  const [availableOrgaos, setAvailableOrgaos] = useState<string[]>([]);
-  const [availableTipos, setAvailableTipos] = useState<string[]>([]);
+  const [availableOrgaos, setAvailableOrgaos] = useState<FilterOption[]>([]);
+  const [availableTipos, setAvailableTipos] = useState<FilterOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,19 +32,18 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
         data_fim: filterState?.data_fim || undefined,
       };
 
-      const [materiasRes, edicoesRes, orgaosStats, tiposStats, dashboardSummary] = await Promise.all([
+      const [materiasRes, edicoesRes, filterOptions, dashboardSummary] = await Promise.all([
         MateriaService.getMaterias(materiasParams),
         EdicaoService.getEdicoes(5),
-        MateriaService.getStatsOrgaos(30),
-        MateriaService.getStatsTipos(),
+        MateriaService.getFilterOptions(),
         MateriaService.getDashboardSummary(),
       ]);
 
       setMaterias(materiasRes);
       setEdicoes(edicoesRes);
       setCurrentPage(page);
-      setAvailableOrgaos(orgaosStats.map((stat) => stat.label).filter((value): value is string => !!value));
-      setAvailableTipos(tiposStats.map((stat) => stat.label).filter((value): value is string => !!value));
+      setAvailableOrgaos(filterOptions.orgaos);
+      setAvailableTipos(filterOptions.tipos);
       setStats(dashboardSummary);
     } catch (err) {
       setError(getApiErrorMessage(err, 'Falha ao carregar dados do servidor.'));

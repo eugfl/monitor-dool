@@ -11,14 +11,15 @@ import {
 } from '@/components/select';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { FilterState } from '@/hooks/useFilters';
+import type { FilterOption } from '@/types';
 
 interface FiltersProps {
   filters: FilterState;
   updateFilter: (key: keyof FilterState, value: string) => void;
   resetFilters: () => void;
   onApply: () => void;
-  availableOrgaos?: string[];
-  availableTipos?: string[];
+  availableOrgaos?: FilterOption[];
+  availableTipos?: FilterOption[];
   isLoading?: boolean;
 }
 
@@ -91,7 +92,7 @@ export function Filters({
                   <SelectContent>
                     <SelectItem value="all">Todos os órgãos</SelectItem>
                     {availableOrgaos.map((orgao) => (
-                      <SelectItem key={orgao} value={orgao}>{orgao}</SelectItem>
+                      <SelectItem key={orgao.value} value={orgao.value}>{orgao.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -106,8 +107,8 @@ export function Filters({
                   <SelectContent>
                     <SelectItem value="all">Todos os tipos</SelectItem>
                     {availableTipos.map((tipo) => (
-                      <SelectItem key={tipo} value={tipo}>
-                        {tipo.charAt(0).toUpperCase() + tipo.slice(1).toLowerCase()}
+                      <SelectItem key={tipo.value} value={tipo.value}>
+                        {tipo.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

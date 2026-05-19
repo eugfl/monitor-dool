@@ -39,6 +39,16 @@ export interface StatsOrgao {
   value: number;
 }
 
+export interface FilterOption {
+  value: string;
+  label: string;
+}
+
+export interface FilterOptionsResponse {
+  orgaos: FilterOption[];
+  tipos: FilterOption[];
+}
+
 export interface DashboardStats {
   total_materias: number;
   total_edicoes: number;
