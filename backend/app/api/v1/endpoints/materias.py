@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.schemas.materia import (
     DashboardResumo,
     EstatisticaItem,
+    MateriaFiltros,
     MateriaResponse,
     MateriaResumo,
 )
@@ -73,6 +74,14 @@ async def resumo_dashboard(
 ) -> DashboardResumo:
     """Resumo consolidado para os cards principais da dashboard."""
     return await crud.obter_resumo_dashboard(db)
+
+
+@router.get("/filtros", response_model=MateriaFiltros)
+async def filtros_materias(
+    db: AsyncSession = Depends(get_db),
+) -> MateriaFiltros:
+    """Opcoes normalizadas para filtros de materias."""
+    return await crud.obter_opcoes_filtros(db)
 
 
 @router.get("/{id}", response_model=MateriaResponse)

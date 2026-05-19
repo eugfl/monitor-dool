@@ -5,6 +5,90 @@ from app.database.models import Edicao, Materia
 from typing import List, Optional
 from datetime import date
 
+
+ORGAOS_INVALIDOS = {
+    "PDF",
+    "HTML",
+    "DOE",
+    "DOOL",
+    "DIARIO OFICIAL",
+    "DIÁRIO OFICIAL",
+}
+
+TIPOS_LABELS = {
+    "ATO": "Ato",
+    "AVISO": "Aviso",
+    "CONTRATO": "Contrato",
+    "DECRETO": "Decreto",
+    "EDITAL": "Edital",
+    "LEI": "Lei",
+    "LICITACAO": "Licitação",
+    "LICITAÇÃO": "Licitação",
+    "NAO_IDENTIFICADO": "Outros",
+    "NÃO_IDENTIFICADO": "Outros",
+    "OUTROS": "Outros",
+    "PORTARIA": "Portaria",
+    "RESOLUCAO": "Resolução",
+    "RESOLUÇÃO": "Resolução",
+}
+
+SIGLAS = {
+    "ADAB",
+    "AGERBA",
+    "BAHIAGÁS",
+    "CNPJ",
+    "CPF",
+    "DETRAN",
+    "EMBASA",
+    "FAPESB",
+    "IPAC",
+    "PM",
+    "SAEB",
+    "SEC",
+    "SEFAZ",
+    "SEI",
+    "SESAB",
+    "SSP",
+    "UNEB",
+}
+
+
+def _normalizar_espacos(value: str) -> str:
+    return " ".join(value.replace("_", " ").split())
+
+
+def _formatar_label(value: str) -> str:
+    texto = _normalizar_espacos(value)
+    palavras = []
+
+    for palavra in texto.split(" "):
+        palavra_upper = palavra.upper()
+        if palavra_upper in SIGLAS:
+            palavras.append(palavra_upper)
+        elif len(palavra) <= 2 and palavra_upper not in {"DA", "DE", "DO", "DAS", "DOS", "E"}:
+            palavras.append(palavra_upper)
+        else:
+            palavras.append(palavra.lower().capitalize())
+
+    return " ".join(palavras)
+
+
+def _formatar_tipo(value: Optional[str]) -> str:
+    if not value:
+        return "Outros"
+
+    tipo = _normalizar_espacos(value).upper()
+    return TIPOS_LABELS.get(tipo, _formatar_label(tipo))
+
+
+def _orgao_valido(value: Optional[str]) -> bool:
+    if not value:
+        return False
+
+    orgao = _normalizar_espacos(value)
+    orgao_upper = orgao.upper()
+    return len(orgao) >= 3 and orgao_upper not in ORGAOS_INVALIDOS and not orgao_upper.endswith(".PDF")
+
 # =========================================================
 # CRUD EDIÇÃO
 # =========================================================
@@ -175,6 +259,38 @@ async def obter_estatisticas_orgaos(db: AsyncSession, limit: int = 10):
         .limit(limit)
     )
     return [{"label": row[0], "value": row[1]} for row in result.all()]
+
+
+async def obter_opcoes_filtros(db: AsyncSession):
+    """Opcoes normalizadas para os selects de filtros."""
+    orgaos_result = await db.execute(
+        select(Materia.orgao, func.count(Materia.id))
+        .where(Materia.orgao.is_not(None))
+        .group_by(Materia.orgao)
+        .order_by(func.count(Materia.id).desc(), Materia.orgao.asc())
+        .limit(100)
+    )
+
+    tipos_result = await db.execute(
+        select(Materia.tipo_documental, func.count(Materia.id))
+        .where(Materia.tipo_documental.is_not(None))
+        .group_by(Materia.tipo_documental)
+        .order_by(func.count(Materia.id).desc(), Materia.tipo_documental.asc())
+    )
+
+    orgaos = [
+        {"value": row[0], "label": _formatar_label(row[0])}
+        for row in orgaos_result.all()
+        if _orgao_valido(row[0])
+    ]
+
+    tipos = [
+        {"value": row[0], "label": _formatar_tipo(row[0])}
+        for row in tipos_result.all()
+        if row[0]
+    ]
+
+    return {"orgaos": orgaos, "tipos": tipos}
 
 
 async def obter_resumo_dashboard(db: AsyncSession):

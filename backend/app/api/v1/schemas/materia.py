@@ -43,6 +43,20 @@ class EstatisticaItem(BaseModel):
     value: int = Field(..., description="Contagem de materias")
 
 
+class FiltroOpcao(BaseModel):
+    """Opcao normalizada para selects de filtro."""
+
+    value: str = Field(..., description="Valor real enviado para a API")
+    label: str = Field(..., description="Texto amigavel exibido na interface")
+
+
+class MateriaFiltros(BaseModel):
+    """Opcoes disponiveis para os filtros de materias."""
+
+    orgaos: list[FiltroOpcao] = Field(default_factory=list)
+    tipos: list[FiltroOpcao] = Field(default_factory=list)
+
+
 class DashboardResumo(BaseModel):
     """Resumo consolidado para os cards principais da dashboard."""
 
