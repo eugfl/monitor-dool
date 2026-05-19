@@ -1,3 +1,11 @@
+export type EntityValue =
+  | string
+  | number
+  | boolean
+  | null
+  | EntityValue[]
+  | { [key: string]: EntityValue };
+
 export interface Materia {
   id: number;
   materia_id_original: string;
@@ -8,7 +16,7 @@ export interface Materia {
   created_at: string;
   edicao_id?: number;
   texto?: string;
-  entidades?: Record<string, any>;
+  entidades?: Record<string, EntityValue>;
   updated_at?: string;
 }
 

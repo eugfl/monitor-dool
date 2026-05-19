@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MateriaService } from '@/services/api';
-import type { Materia } from '@/types';
+import type { EntityValue, Materia } from '@/types';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Calendar, Building2, Tag, FileText, Download, Share2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/button';
@@ -46,6 +46,8 @@ export function MateriaDetail() {
       </div>
     );
   }
+
+  const renderEntityValue = (value: EntityValue) => String(value);
 
   return (
     <motion.div 
@@ -154,13 +156,13 @@ export function MateriaDetail() {
                   <div key={type} className="space-y-2">
                     <p className="text-[10px] font-bold text-muted-foreground uppercase">{type}</p>
                     <div className="flex flex-wrap gap-2">
-                      {Array.isArray(values) ? values.map((val: any, i: number) => (
+                      {Array.isArray(values) ? values.map((val, i) => (
                         <span key={i} className="px-2 py-1 bg-background border text-[11px] rounded font-medium shadow-sm">
-                          {String(val)}
+                          {renderEntityValue(val)}
                         </span>
                       )) : (
                         <span className="px-2 py-1 bg-background border text-[11px] rounded font-medium shadow-sm">
-                          {String(values)}
+                          {renderEntityValue(values)}
                         </span>
                       )}
                     </div>

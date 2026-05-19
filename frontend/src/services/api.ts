@@ -3,6 +3,21 @@ import type { Edicao, Materia, StatsOrgao } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
+interface MateriasRequestParams {
+  q?: string;
+  orgao?: string;
+  tipo?: string;
+  data_inicio?: string;
+  data_fim?: string;
+  edicao_id?: number;
+  limit?: number;
+  offset?: number;
+}
+
+interface MateriasApiParams extends Omit<MateriasRequestParams, 'tipo'> {
+  tipo_documental?: string;
+}
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
@@ -39,24 +54,14 @@ export const EdicaoService = {
 };
 
 export const MateriaService = {
-  getMaterias: async (params: {
-    q?: string;
-    orgao?: string;
-    tipo?: string;
-    data_inicio?: string;
-    data_fim?: string;
-    edicao_id?: number;
-    limit?: number;
-    offset?: number;
-  }) => {
+  getMaterias: async (params: MateriasRequestParams) => {
     const hasFilters = params.q || params.orgao || params.tipo || params.data_inicio || params.data_fim;
     const endpoint = hasFilters ? '/materias/search/' : '/materias/';
     
-    const queryParams: any = { ...params };
-    if (queryParams.tipo) {
-      queryParams.tipo_documental = queryParams.tipo;
-      delete queryParams.tipo;
-    }
+    const { tipo, ...rest } = params;
+    const queryParams: MateriasApiParams = tipo
+      ? { ...rest, tipo_documental: tipo }
+      : rest;
 
     const response = await api.get<Materia[]>(endpoint, { params: queryParams });
     return response.data;
