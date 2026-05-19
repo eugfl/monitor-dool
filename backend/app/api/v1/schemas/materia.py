@@ -36,13 +36,6 @@ class MateriaResponse(MateriaResumo):
     model_config = {"from_attributes": True}
 
 
-class EstatisticaItem(BaseModel):
-    """Item de estatistica agregada (label + contagem)."""
-
-    label: Optional[str] = Field(None, description="Nome do grupo (tipo ou orgao)")
-    value: int = Field(..., description="Contagem de materias")
-
-
 class FiltroOpcao(BaseModel):
     """Opcao normalizada para selects de filtro."""
 
