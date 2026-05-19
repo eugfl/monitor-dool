@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { CalendarDays, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
@@ -51,8 +52,8 @@ export function RecentEditions({ edicoes }: RecentEditionsProps) {
           ))}
         </div>
 
-        <Button variant="ghost" className="mt-6 w-full text-xs font-bold text-muted-foreground hover:text-primary">
-          Ver histórico completo
+        <Button variant="ghost" asChild className="mt-6 w-full text-xs font-bold text-muted-foreground hover:text-primary">
+          <Link to="/edicoes">Ver histórico completo</Link>
         </Button>
       </section>
 

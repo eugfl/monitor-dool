@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Toaster } from '@/components/sonner';
 import { Dashboard } from '@/pages/Dashboard';
+import { EditionsHistory } from '@/pages/EditionsHistory';
 import { MateriaDetail } from '@/pages/MateriaDetail';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
         <main className="max-w-7xl mx-auto px-4 py-8 md:px-6 lg:px-8">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/edicoes" element={<EditionsHistory />} />
             <Route path="/materia/:id" element={<MateriaDetail />} />
           </Routes>
         </main>

@@ -36,7 +36,6 @@ export function useFilters(initialFilters: FilterState = defaultFilters) {
     setFilters({
       ...defaultFilters,
       ...nextFilters,
-      ...(nextFilters.dateMode === 'single' ? { data_fim: '' } : {}),
     });
   }, []);
 

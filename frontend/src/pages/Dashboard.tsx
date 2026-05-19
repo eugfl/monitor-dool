@@ -33,7 +33,7 @@ function getFiltersFromSearchParams(searchParams: URLSearchParams): FilterState 
     tipo: searchParams.get('tipo') || defaultFilters.tipo,
     dateMode,
     data_inicio: searchParams.get('data_inicio') || defaultFilters.data_inicio,
-    data_fim: dateMode === 'range' ? searchParams.get('data_fim') || defaultFilters.data_fim : '',
+    data_fim: searchParams.get('data_fim') || defaultFilters.data_fim,
   };
 }
 
@@ -60,6 +60,17 @@ function buildDashboardSearchParams(filters: FilterState, page: number) {
 
 function areFiltersEqual(left: FilterState, right: FilterState) {
   return filterKeys.every((key) => left[key] === right[key]);
+}
+
+function getRequestFilters(filters: FilterState): FilterState {
+  if (filters.dateMode === 'single' && filters.data_inicio) {
+    return {
+      ...filters,
+      data_fim: filters.data_inicio,
+    };
+  }
+
+  return filters;
 }
 
 export function Dashboard() {
@@ -138,8 +149,9 @@ export function Dashboard() {
   const debouncedSearch = useDebounce(filters.q, 500);
 
   const handleApplyFilters = useCallback((page = 1) => {
-    updateUrlState(filtersRef.current, page);
-    refresh(filtersRef.current, page);
+    const requestFilters = getRequestFilters(filtersRef.current);
+    updateUrlState(requestFilters, page);
+    refresh(requestFilters, page);
   }, [refresh, updateUrlState]);
 
   useEffect(() => {
@@ -148,7 +160,7 @@ export function Dashboard() {
       return;
     }
 
-    const nextFilters = { ...filtersRef.current, q: debouncedSearch };
+    const nextFilters = getRequestFilters({ ...filtersRef.current, q: debouncedSearch });
     updateUrlState(nextFilters, 1, true);
     refresh(nextFilters, 1);
   }, [debouncedSearch, refresh, updateUrlState]);
@@ -259,8 +271,9 @@ export function Dashboard() {
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1) return;
-    updateUrlState(filters, newPage);
-    refresh(filters, newPage);
+    const requestFilters = getRequestFilters(filters);
+    updateUrlState(requestFilters, newPage);
+    refresh(requestFilters, newPage);
     document.querySelector('.custom-scrollbar')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
