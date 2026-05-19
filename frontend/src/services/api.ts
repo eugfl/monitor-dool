@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Edicao, Materia, StatsOrgao } from '@/types';
+import type { DashboardStats, Edicao, Materia, StatsOrgao } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -116,6 +116,10 @@ export const MateriaService = {
   },
   getStatsTipos: async () => {
     const response = await api.get<StatsOrgao[]>('/materias/estatisticas/tipos');
+    return response.data;
+  },
+  getDashboardSummary: async () => {
+    const response = await api.get<DashboardStats>('/materias/estatisticas/resumo');
     return response.data;
   },
   triggerColeta: async (data_inicio: string, data_fim?: string) => {

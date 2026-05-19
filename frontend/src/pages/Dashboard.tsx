@@ -22,7 +22,7 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useFilters } from '@/hooks/useFilters';
 import { EdicaoService, MateriaService, getApiErrorMessage, isApiNotFound } from '@/services/api';
-import { formatDateLong } from '@/utils/formatters';
+import { formatDateLong, formatDateShort } from '@/utils/formatters';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -56,6 +56,15 @@ export function Dashboard() {
 
   const hasDateFilter = !!filters.data_inicio;
   const hasActiveFilters = filters.q !== '' || filters.orgao !== 'all' || filters.tipo !== 'all' || filters.data_inicio !== '' || filters.data_fim !== '';
+  const latestCollectionLabel = stats?.ultima_coleta_em
+    ? new Date(stats.ultima_coleta_em).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    : 'Sem coleta';
+  const latestEditionLabel = stats?.ultima_edicao_data ? formatDateShort(stats.ultima_edicao_data) : '--';
 
   useEffect(() => {
     document.title = 'Dashboard | Monitor DOOL';
@@ -201,7 +210,7 @@ export function Dashboard() {
             </span>
             <div className="flex items-center gap-2">
               <RefreshCw className={`w-3 h-3 ${loading || isCollecting ? 'animate-spin' : ''}`} />
-              ATUALIZADO AGORA: {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              ÚLTIMA COLETA: {latestCollectionLabel}
             </div>
           </div>
         </div>
@@ -265,7 +274,7 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card className="relative overflow-hidden p-6 border-primary/20 bg-primary/[0.02] hover-lift group cursor-pointer">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <FileText className="w-16 h-16 text-primary" />
@@ -274,10 +283,10 @@ export function Dashboard() {
                 <div className="p-2 bg-primary/10 rounded-lg text-primary">
                   <FileText className="w-5 h-5" />
                 </div>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Total de Matérias</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Matérias</p>
               </div>
               <p className="text-3xl font-bold tracking-tighter">{stats?.total_materias || 0}</p>
-              <p className="text-[10px] text-primary font-bold mt-1">Sincronizado com a base oficial</p>
+              <p className="text-[10px] text-primary font-bold mt-1">Na base local</p>
             </Card>
 
             <Card className="relative overflow-hidden p-6 border-primary/20 bg-primary/[0.02] hover-lift group cursor-pointer">
@@ -288,10 +297,10 @@ export function Dashboard() {
                 <div className="p-2 bg-primary/10 rounded-lg text-primary">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Nomeações Detectadas</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Edições</p>
               </div>
-              <p className="text-3xl font-bold tracking-tighter">{stats?.recent_nominations || 0}</p>
-              <p className="text-[10px] text-primary font-bold mt-1">Filtro de RH Ativo</p>
+              <p className="text-3xl font-bold tracking-tighter">{stats?.total_edicoes || 0}</p>
+              <p className="text-[10px] text-primary font-bold mt-1">Coletadas</p>
             </Card>
 
             <Card className="relative overflow-hidden p-6 border-primary/20 bg-primary/[0.02] hover-lift group cursor-pointer">
@@ -302,10 +311,26 @@ export function Dashboard() {
                 <div className="p-2 bg-primary/10 rounded-lg text-primary">
                   <LayoutList className="w-5 h-5" />
                 </div>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Editais e Licitações</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Órgãos</p>
               </div>
-              <p className="text-3xl font-bold tracking-tighter">{stats?.recent_edicts || 0}</p>
-              <p className="text-[10px] text-primary font-bold mt-1">Prioridade de Leitura</p>
+              <p className="text-3xl font-bold tracking-tighter">{stats?.total_orgaos || 0}</p>
+              <p className="text-[10px] text-primary font-bold mt-1">Identificados</p>
+            </Card>
+
+            <Card className="relative overflow-hidden p-6 border-primary/20 bg-primary/[0.02] hover-lift group cursor-pointer">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <CalendarDays className="w-16 h-16 text-primary" />
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Última edição</p>
+              </div>
+              <p className="text-3xl font-bold tracking-tighter">{latestEditionLabel}</p>
+              <p className="text-[10px] text-primary font-bold mt-1">
+                {stats?.ultima_edicao_numero ? `Edição ${stats.ultima_edicao_numero}` : 'Aguardando coleta'}
+              </p>
             </Card>
           </div>
 

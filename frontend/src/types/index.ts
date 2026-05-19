@@ -41,6 +41,7 @@ export interface DashboardStats {
   total_materias: number;
   total_edicoes: number;
   total_orgaos: number;
-  recent_nominations: number;
-  recent_edicts: number;
+  ultima_edicao_data: string | null;
+  ultima_edicao_numero: number | null;
+  ultima_coleta_em: string | null;
 }

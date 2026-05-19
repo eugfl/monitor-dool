@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { DashboardStats, Materia, Edicao } from '@/types';
+import { useCallback, useEffect, useState } from 'react';
+
+import type { DashboardStats, Edicao, Materia } from '@/types';
+import { EdicaoService, MateriaService, getApiErrorMessage } from '@/services/api';
 import type { FilterState } from './useFilters';
-import { MateriaService, EdicaoService, getApiErrorMessage } from '@/services/api';
 
 export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -18,7 +19,7 @@ export function useDashboard() {
     try {
       if (!isInitial) setLoading(true);
       setError(null);
-      
+
       const materiasParams = {
         limit: ITEMS_PER_PAGE,
         offset: (page - 1) * ITEMS_PER_PAGE,
@@ -29,52 +30,30 @@ export function useDashboard() {
         data_fim: filterState?.data_fim || undefined,
       };
 
-      const [materiasRes, edicoesRes, orgaosStats, tiposStats] = await Promise.all([
+      const [materiasRes, edicoesRes, orgaosStats, tiposStats, dashboardSummary] = await Promise.all([
         MateriaService.getMaterias(materiasParams),
         EdicaoService.getEdicoes(5),
         MateriaService.getStatsOrgaos(30),
-        MateriaService.getStatsTipos()
+        MateriaService.getStatsTipos(),
+        MateriaService.getDashboardSummary(),
       ]);
 
       setMaterias(materiasRes);
       setEdicoes(edicoesRes);
       setCurrentPage(page);
-      
-      // Mapear órgãos e tipos únicos para os filtros
-      setAvailableOrgaos(orgaosStats.map(s => s.label).filter((v): v is string => !!v));
-      setAvailableTipos(tiposStats.map(s => s.label).filter((v): v is string => !!v));
-
-      // Calcular estatísticas reais baseadas nos tipos
-      const totalMaterias = tiposStats.reduce((acc, curr) => acc + curr.value, 0);
-      const nomeacoesCount = tiposStats.find(s => s.label === 'NOMEACAO' || s.label === 'NOMEAÇÃO')?.value || 0;
-      const editaisCount = tiposStats.find(s => s.label === 'EDITAL' || s.label === 'LICITACAO' || s.label === 'LICITAÇÃO')?.value || 0;
-
-      setStats({
-        total_materias: totalMaterias,
-        total_edicoes: edicoesRes.length,
-        total_orgaos: orgaosStats.length,
-        recent_nominations: nomeacoesCount,
-        recent_edicts: editaisCount
-      });
-      
+      setAvailableOrgaos(orgaosStats.map((stat) => stat.label).filter((value): value is string => !!value));
+      setAvailableTipos(tiposStats.map((stat) => stat.label).filter((value): value is string => !!value));
+      setStats(dashboardSummary);
     } catch (err) {
-      setError(getApiErrorMessage(err, "Falha ao carregar dados do servidor."));
+      setError(getApiErrorMessage(err, 'Falha ao carregar dados do servidor.'));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    if (isMounted) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchDashboardData(true);
-    }
-
-    return () => {
-      isMounted = false;
-    };
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchDashboardData(true);
   }, [fetchDashboardData]);
 
   const refresh = useCallback((filters?: FilterState, page = 1) => {
@@ -91,6 +70,6 @@ export function useDashboard() {
     error,
     currentPage,
     itemsPerPage: ITEMS_PER_PAGE,
-    refresh
+    refresh,
   };
 }
