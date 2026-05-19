@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { DashboardStats, Edicao, Materia, StatsOrgao } from '@/types';
+import type { CollectionStatus, DashboardStats, Edicao, Materia, StatsOrgao } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -124,7 +124,11 @@ export const MateriaService = {
   },
   triggerColeta: async (data_inicio: string, data_fim?: string) => {
     const params = data_fim ? { data_fim } : {};
-    const response = await api.post<{ message: string; status: string }>(`/tasks/coleta/${data_inicio}`, null, { params });
+    const response = await api.post<CollectionStatus>(`/tasks/coleta/${data_inicio}`, null, { params });
+    return response.data;
+  },
+  getColetaStatus: async (jobId: string) => {
+    const response = await api.get<CollectionStatus>(`/tasks/coleta/status/${jobId}`);
     return response.data;
   },
 };

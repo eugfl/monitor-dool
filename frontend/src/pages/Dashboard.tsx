@@ -25,6 +25,7 @@ import { EdicaoService, MateriaService, getApiErrorMessage, isApiNotFound } from
 import { formatDateLong, formatDateShort } from '@/utils/formatters';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const finalCollectionStatuses = new Set(['success', 'no_edition', 'failed']);
 
 function getTodayISO() {
   const today = new Date();
@@ -89,21 +90,17 @@ export function Dashboard() {
     refresh({ ...filtersRef.current, q: debouncedSearch }, 1);
   }, [debouncedSearch, refresh]);
 
-  const waitForCollectedEdition = useCallback(async (date: string) => {
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      await wait(4000);
+  const waitForCollectionStatus = useCallback(async (jobId: string) => {
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await wait(3000);
+      const status = await MateriaService.getColetaStatus(jobId);
 
-      try {
-        await EdicaoService.getEdicaoByDate(date);
-        return true;
-      } catch (err) {
-        if (!isApiNotFound(err)) {
-          throw err;
-        }
+      if (finalCollectionStatuses.has(status.status)) {
+        return status;
       }
     }
 
-    return false;
+    return null;
   }, []);
 
   const collectEdition = useCallback(async (dataInicio: string, dataFim?: string, source: 'auto' | 'manual' = 'manual') => {
@@ -119,24 +116,34 @@ export function Dashboard() {
 
     try {
       const res = await MateriaService.triggerColeta(dataInicio, dataFim);
+      const finalStatus = await waitForCollectionStatus(res.job_id);
+      await refresh(filtersRef.current);
 
-      if (!dataFim) {
-        const foundEdition = await waitForCollectedEdition(dataInicio);
-        await refresh(filtersRef.current);
-
-        if (!foundEdition && source === 'auto') {
+      if (finalStatus?.status === 'no_edition' && source === 'auto') {
           setCollectionMsg({
             type: 'info',
             text: `Hoje (${todayLabel}) não tivemos Diário Oficial. Exibindo edições anteriores.`,
           });
           return;
-        }
-      } else {
-        await wait(5000);
-        await refresh(filtersRef.current);
       }
 
-      setCollectionMsg({ type: 'success', text: res.message });
+      if (!finalStatus) {
+        setCollectionMsg({
+          type: 'info',
+          text: 'A coleta ainda está em andamento. A timeline foi atualizada com os dados disponíveis.',
+        });
+        return;
+      }
+
+      if (finalStatus.status === 'failed') {
+        setCollectionMsg({ type: 'error', text: finalStatus.message });
+        return;
+      }
+
+      setCollectionMsg({
+        type: finalStatus.status === 'no_edition' ? 'info' : 'success',
+        text: finalStatus.message,
+      });
     } catch (err) {
       setCollectionMsg({
         type: 'error',
@@ -145,7 +152,7 @@ export function Dashboard() {
     } finally {
       setIsCollecting(false);
     }
-  }, [refresh, todayLabel, waitForCollectedEdition]);
+  }, [refresh, todayLabel, waitForCollectionStatus]);
 
   useEffect(() => {
     if (didCheckTodayCollection.current) return;

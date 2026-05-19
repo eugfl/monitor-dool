@@ -47,3 +47,13 @@ export interface DashboardStats {
   ultima_edicao_numero: number | null;
   ultima_coleta_em: string | null;
 }
+
+export interface CollectionStatus {
+  job_id: string;
+  status: 'queued' | 'running' | 'success' | 'no_edition' | 'failed';
+  data_inicio: string;
+  data_fim: string | null;
+  message: string;
+  started_at: string | null;
+  finished_at: string | null;
+}
