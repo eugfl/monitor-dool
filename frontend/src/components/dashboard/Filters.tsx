@@ -19,6 +19,7 @@ interface FiltersProps {
   onApply: () => void;
   availableOrgaos?: string[];
   availableTipos?: string[];
+  isLoading?: boolean;
 }
 
 export function Filters({ 
@@ -27,7 +28,8 @@ export function Filters({
   resetFilters, 
   onApply,
   availableOrgaos = [],
-  availableTipos = []
+  availableTipos = [],
+  isLoading = false
 }: FiltersProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
@@ -64,8 +66,9 @@ export function Filters({
           <Button 
             className="flex-1 md:flex-none h-11 px-8 font-bold"
             onClick={onApply}
+            disabled={isLoading}
           >
-            Buscar
+            {isLoading ? 'Buscando...' : 'Buscar'}
           </Button>
         </div>
       </div>

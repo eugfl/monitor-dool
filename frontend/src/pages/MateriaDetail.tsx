@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MateriaService } from '@/services/api';
+import { MateriaService, getApiErrorMessage } from '@/services/api';
 import type { EntityValue, Materia } from '@/types';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Calendar, Building2, Tag, FileText, Download, Share2, ExternalLink } from 'lucide-react';
+import { AlertCircle, ChevronLeft, Calendar, Building2, Tag, FileText, Download, Share2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 
@@ -12,28 +12,61 @@ export function MateriaDetail() {
   const navigate = useNavigate();
   const [materia, setMateria] = useState<Materia | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadMateria = useCallback(async () => {
+    const materiaId = Number(id);
+
+    if (!id || Number.isNaN(materiaId)) {
+      setMateria(null);
+      setError('O identificador da matéria é inválido.');
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await MateriaService.getMateria(materiaId);
+      setMateria(data);
+      document.title = `${data.titulo.slice(0, 40)}... | Monitor DOOL`;
+    } catch (err) {
+      setMateria(null);
+      setError(getApiErrorMessage(err, 'Não foi possível carregar a matéria.'));
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
-    async function loadMateria() {
-      if (!id) return;
-      try {
-        const data = await MateriaService.getMateria(Number(id));
-        setMateria(data);
-        document.title = `${data.titulo.slice(0, 40)}... | Monitor DOOL`;
-      } catch (err) {
-        console.error("Erro ao carregar matéria:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadMateria();
-  }, [id]);
+  }, [loadMateria]);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-40 gap-4">
         <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
         <p className="text-muted-foreground font-medium animate-pulse">Carregando conteúdo integral...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto flex max-w-xl flex-col items-center justify-center gap-6 py-40 text-center">
+        <div className="rounded-full bg-destructive/10 p-4 text-destructive">
+          <AlertCircle className="h-10 w-10" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold">Não foi possível carregar a matéria</h2>
+          <p className="text-muted-foreground">{error}</p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Button variant="outline" onClick={() => navigate('/')}>Voltar ao Dashboard</Button>
+          <Button onClick={loadMateria}>Tentar novamente</Button>
+        </div>
       </div>
     );
   }
@@ -50,15 +83,14 @@ export function MateriaDetail() {
   const renderEntityValue = (value: EntityValue) => String(value);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="max-w-5xl mx-auto space-y-8"
     >
-      {/* Navigation Header */}
       <div className="flex items-center justify-between">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => navigate(-1)}
           className="gap-2 hover:text-primary pl-0"
         >
@@ -78,7 +110,6 @@ export function MateriaDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Main Content */}
         <div className="lg:col-span-3 space-y-8">
           <Card className="p-8 md:p-12 shadow-xl border-none">
             <header className="mb-10 space-y-6">
@@ -91,7 +122,7 @@ export function MateriaDetail() {
                   {new Date(materia.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                 </span>
               </div>
-              
+
               <h1 className="text-3xl md:text-4xl font-heading font-bold leading-tight">
                 {materia.titulo}
               </h1>
@@ -109,12 +140,11 @@ export function MateriaDetail() {
               </div>
             </header>
 
-            {/* Conteúdo da Matéria com Scroll Fixo */}
             <div className="bg-card border rounded-lg overflow-hidden shadow-inner bg-slate-50/30">
               <div className="h-[600px] overflow-y-auto p-8 md:p-10 custom-scrollbar">
                 <article className="prose prose-slate max-w-none prose-headings:font-heading prose-p:leading-relaxed prose-table:border prose-table:border-border prose-th:bg-muted/50 prose-th:p-2 prose-td:p-2 prose-td:border">
                   {materia.texto ? (
-                    <div 
+                    <div
                       className="materia-content text-foreground font-serif text-lg"
                       dangerouslySetInnerHTML={{ __html: materia.texto }}
                     />
@@ -129,9 +159,9 @@ export function MateriaDetail() {
 
             {materia.url && (
               <div className="mt-12 pt-8 border-t">
-                <a 
-                  href={materia.url} 
-                  target="_blank" 
+                <a
+                  href={materia.url}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
                 >
@@ -143,7 +173,6 @@ export function MateriaDetail() {
           </Card>
         </div>
 
-        {/* Info Sidebar */}
         <aside className="space-y-6">
           <Card className="p-6 bg-muted/20 border-dashed border-2">
             <h3 className="font-bold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">

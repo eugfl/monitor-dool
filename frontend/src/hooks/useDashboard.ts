@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { DashboardStats, Materia, Edicao } from '@/types';
 import type { FilterState } from './useFilters';
-import { MateriaService, EdicaoService } from '@/services/api';
+import { MateriaService, EdicaoService, getApiErrorMessage } from '@/services/api';
 
 export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -58,8 +58,7 @@ export function useDashboard() {
       });
       
     } catch (err) {
-      console.error("Erro ao carregar dashboard:", err);
-      setError("Falha ao carregar dados do servidor.");
+      setError(getApiErrorMessage(err, "Falha ao carregar dados do servidor."));
     } finally {
       setLoading(false);
     }

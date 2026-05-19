@@ -4,11 +4,11 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { Filters } from '@/components/dashboard/Filters';
 import { MateriaCard } from '@/components/dashboard/MateriaCard';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, LayoutList, ShieldCheck, CalendarDays, ExternalLink, RefreshCw, SearchX, Database, FileText } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, LayoutList, ShieldCheck, CalendarDays, ExternalLink, RefreshCw, SearchX, Database, FileText } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { MateriaService } from '@/services/api';
+import { MateriaService, getApiErrorMessage } from '@/services/api';
 import { formatDateLong } from '@/utils/formatters';
 
 export function Dashboard() {
@@ -17,6 +17,7 @@ export function Dashboard() {
     latestMaterias, 
     edicoes, 
     loading, 
+    error,
     refresh, 
     currentPage, 
     availableOrgaos, 
@@ -65,10 +66,9 @@ export function Dashboard() {
       // Refresh after a delay to see if data appeared
       setTimeout(() => refresh(filters), 5000);
     } catch (error) {
-      const err = error as { response?: { data?: { detail?: string } } };
       setCollectionMsg({ 
         type: 'error', 
-        text: err.response?.data?.detail || "Erro ao iniciar coleta. Verifique a data e tente novamente." 
+        text: getApiErrorMessage(error, "Erro ao iniciar coleta. Verifique a data e tente novamente.") 
       });
     } finally {
       setIsCollecting(false);
@@ -127,8 +127,30 @@ export function Dashboard() {
           onApply={() => handleApplyFilters(1)}
           availableOrgaos={availableOrgaos}
           availableTipos={availableTipos}
+          isLoading={loading}
         />
       </header>
+
+      {error && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+            <div>
+              <p className="font-bold">Não foi possível atualizar os dados</p>
+              <p className="text-destructive/80">{error}</p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-destructive/30 text-destructive hover:bg-destructive/10"
+            onClick={() => handleApplyFilters(currentPage)}
+            disabled={loading}
+          >
+            {loading ? 'Tentando...' : 'Tentar novamente'}
+          </Button>
+        </div>
+      )}
 
       {/* Dashboard Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -196,6 +218,19 @@ export function Dashboard() {
                 {loading ? (
                   <div className="py-20 text-center text-muted-foreground animate-pulse font-medium">
                     Consultando base de dados...
+                  </div>
+                ) : error && latestMaterias.length === 0 ? (
+                  <div className="py-20 text-center bg-destructive/5 rounded-2xl border-2 border-dashed border-destructive/20 flex flex-col items-center gap-6 px-10">
+                    <div className="p-4 bg-destructive/10 rounded-full">
+                      <AlertCircle className="w-10 h-10 text-destructive" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-heading font-bold text-foreground">Falha ao carregar a timeline</h3>
+                      <p className="text-muted-foreground max-w-md mx-auto">{error}</p>
+                    </div>
+                    <Button variant="outline" onClick={() => handleApplyFilters(currentPage)} disabled={loading}>
+                      Tentar novamente
+                    </Button>
                   </div>
                 ) : latestMaterias.length === 0 ? (
                   <div className="py-20 text-center bg-muted/10 rounded-2xl border-2 border-dashed border-muted flex flex-col items-center gap-6 px-10">

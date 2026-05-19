@@ -18,6 +18,11 @@ interface MateriasApiParams extends Omit<MateriasRequestParams, 'tipo'> {
   tipo_documental?: string;
 }
 
+interface ApiErrorPayload {
+  detail?: string;
+  message?: string;
+}
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
@@ -39,6 +44,35 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export function getApiErrorMessage(error: unknown, fallback = 'Não foi possível completar a solicitação.') {
+  if (!axios.isAxiosError<ApiErrorPayload>(error)) {
+    return fallback;
+  }
+
+  if (error.code === 'ECONNABORTED') {
+    return 'A consulta demorou mais que o esperado. Tente novamente em alguns instantes.';
+  }
+
+  if (!error.response) {
+    return 'Não foi possível conectar à API. Verifique se o backend está online.';
+  }
+
+  const apiMessage = error.response.data?.detail || error.response.data?.message;
+  if (apiMessage) {
+    return apiMessage;
+  }
+
+  if (error.response.status === 404) {
+    return 'O recurso solicitado não foi encontrado.';
+  }
+
+  if (error.response.status >= 500) {
+    return 'O servidor encontrou um problema ao processar a solicitação.';
+  }
+
+  return fallback;
+}
 
 export const EdicaoService = {
   getEdicoes: async (limit = 10, offset = 0) => {
