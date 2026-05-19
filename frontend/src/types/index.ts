@@ -34,11 +34,6 @@ export interface Edicao {
   updated_at?: string | null;
 }
 
-export interface StatsOrgao {
-  label: string;
-  value: number;
-}
-
 export interface FilterOption {
   value: string;
   label: string;

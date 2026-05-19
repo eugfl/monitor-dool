@@ -1,7 +1,9 @@
 import React from 'react';
-import { Search, Filter, Calendar, X } from 'lucide-react';
-import { Input } from '@/components/input';
+import { Calendar, Filter, Search, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
 import { Button } from '@/components/button';
+import { Input } from '@/components/input';
 import {
   Select,
   SelectContent,
@@ -9,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/select';
-import { motion, AnimatePresence } from 'framer-motion';
 import type { FilterState } from '@/hooks/useFilters';
 import type { FilterOption } from '@/types';
 
@@ -18,7 +19,6 @@ interface FiltersProps {
   updateFilter: (key: keyof FilterState, value: string) => void;
   resetFilters: () => void;
   onApply: () => void;
-  availableOrgaos?: FilterOption[];
   availableTipos?: FilterOption[];
   isLoading?: boolean;
 }
@@ -28,13 +28,12 @@ export function Filters({
   updateFilter,
   resetFilters,
   onApply,
-  availableOrgaos = [],
   availableTipos = [],
   isLoading = false,
 }: FiltersProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
 
-  const hasActiveFilters = filters.q !== '' || filters.orgao !== 'all' || filters.tipo !== 'all' || filters.data_inicio !== '' || filters.data_fim !== '';
+  const hasActiveFilters = filters.q !== '' || filters.tipo !== 'all' || filters.data_inicio !== '' || filters.data_fim !== '';
   const isRangeMode = filters.dateMode === 'range';
 
   return (
@@ -43,7 +42,7 @@ export function Filters({
         <div className="relative flex-1 w-full group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
-            placeholder="Pesquisar por palavras-chave, nomes ou decretos..."
+            placeholder="Pesquisar por órgão, pessoa, empresa, decreto..."
             className="pl-10 h-11 bg-muted/30 border-muted-foreground/20 focus-visible:ring-primary/20"
             value={filters.q}
             onChange={(e) => updateFilter('q', e.target.value)}
@@ -60,7 +59,7 @@ export function Filters({
             <Filter className="w-4 h-4" />
             Filtros
             {hasActiveFilters && (
-              <span className="ml-1 w-2 h-2 bg-primary rounded-full"></span>
+              <span className="ml-1 w-2 h-2 bg-primary rounded-full" />
             )}
           </Button>
 
@@ -82,22 +81,7 @@ export function Filters({
             exit={{ height: 0, opacity: 0 }}
             className="border-t bg-muted/5 overflow-hidden"
           >
-            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Órgão / Secretaria</label>
-                <Select value={filters.orgao} onValueChange={(v) => updateFilter('orgao', v)}>
-                  <SelectTrigger className="h-10 bg-card">
-                    <SelectValue placeholder="Todos os órgãos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os órgãos</SelectItem>
-                    {availableOrgaos.map((orgao) => (
-                      <SelectItem key={orgao.value} value={orgao.value}>{orgao.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tipo de Matéria</label>
                 <Select value={filters.tipo} onValueChange={(v) => updateFilter('tipo', v)}>
@@ -115,7 +99,7 @@ export function Filters({
                 </Select>
               </div>
 
-              <div className="space-y-2 md:col-span-3">
+              <div className="space-y-2 md:col-span-2">
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Data de publicação</label>
                 <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_1fr] gap-3 items-center">
                   <Select value={filters.dateMode} onValueChange={(v) => updateFilter('dateMode', v)}>
@@ -158,7 +142,7 @@ export function Filters({
 
             <div className="px-6 py-4 bg-muted/10 border-t flex justify-between items-center gap-3">
               <p className="text-[10px] text-muted-foreground italic">
-                * Caso a edição não exista no sistema, você poderá solicitar a coleta na busca.
+                * Para filtrar por órgão, secretaria, empresa ou pessoa, use a busca textual.
               </p>
               <Button
                 variant="ghost"

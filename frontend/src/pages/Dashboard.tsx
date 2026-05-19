@@ -16,7 +16,7 @@ import { formatDateShort } from '@/utils/formatters';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const finalCollectionStatuses = new Set(['success', 'no_edition', 'failed']);
-const filterKeys = ['q', 'orgao', 'tipo', 'dateMode', 'data_inicio', 'data_fim'] as const;
+const filterKeys = ['q', 'tipo', 'dateMode', 'data_inicio', 'data_fim'] as const;
 
 function getTodayISO() {
   const today = new Date();
@@ -29,7 +29,6 @@ function getFiltersFromSearchParams(searchParams: URLSearchParams): FilterState 
 
   return {
     q: searchParams.get('q') || defaultFilters.q,
-    orgao: searchParams.get('orgao') || defaultFilters.orgao,
     tipo: searchParams.get('tipo') || defaultFilters.tipo,
     dateMode,
     data_inicio: searchParams.get('data_inicio') || defaultFilters.data_inicio,
@@ -85,7 +84,6 @@ export function Dashboard() {
     error,
     refresh,
     currentPage,
-    availableOrgaos,
     availableTipos,
   } = useDashboard(initialFilters, initialPage);
 
@@ -101,7 +99,7 @@ export function Dashboard() {
   const todayLabel = new Date(`${todayISO}T12:00:00`).toLocaleDateString('pt-BR');
 
   const hasDateFilter = !!filters.data_inicio;
-  const hasActiveFilters = filters.q !== '' || filters.orgao !== 'all' || filters.tipo !== 'all' || filters.data_inicio !== '' || filters.data_fim !== '';
+  const hasActiveFilters = filters.q !== '' || filters.tipo !== 'all' || filters.data_inicio !== '' || filters.data_fim !== '';
   const latestCollectionLabel = stats?.ultima_coleta_em
     ? new Date(stats.ultima_coleta_em).toLocaleString('pt-BR', {
       day: '2-digit',
@@ -287,7 +285,6 @@ export function Dashboard() {
           updateFilter={updateFilter}
           resetFilters={handleResetFilters}
           onApply={() => handleApplyFilters(1)}
-          availableOrgaos={availableOrgaos}
           availableTipos={availableTipos}
           isLoading={loading}
         />

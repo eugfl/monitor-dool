@@ -8,7 +8,6 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [latestMaterias, setMaterias] = useState<Materia[]>([]);
   const [edicoes, setEdicoes] = useState<Edicao[]>([]);
-  const [availableOrgaos, setAvailableOrgaos] = useState<FilterOption[]>([]);
   const [availableTipos, setAvailableTipos] = useState<FilterOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +25,6 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
         limit: ITEMS_PER_PAGE,
         offset: (page - 1) * ITEMS_PER_PAGE,
         q: filterState?.q || undefined,
-        orgao: filterState?.orgao !== 'all' ? filterState?.orgao : undefined,
         tipo: filterState?.tipo !== 'all' ? filterState?.tipo : undefined,
         data_inicio: filterState?.data_inicio || undefined,
         data_fim: filterState?.data_fim || undefined,
@@ -42,7 +40,6 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
       setMaterias(materiasRes);
       setEdicoes(edicoesRes);
       setCurrentPage(page);
-      setAvailableOrgaos(filterOptions.orgaos);
       setAvailableTipos(filterOptions.tipos);
       setStats(dashboardSummary);
     } catch (err) {
@@ -65,7 +62,6 @@ export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
     stats,
     latestMaterias,
     edicoes,
-    availableOrgaos,
     availableTipos,
     loading,
     error,

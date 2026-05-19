@@ -5,14 +5,12 @@ import type {
   Edicao,
   FilterOptionsResponse,
   Materia,
-  StatsOrgao,
 } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 interface MateriasRequestParams {
   q?: string;
-  orgao?: string;
   tipo?: string;
   data_inicio?: string;
   data_fim?: string;
@@ -100,7 +98,7 @@ export const EdicaoService = {
 
 export const MateriaService = {
   getMaterias: async (params: MateriasRequestParams) => {
-    const hasFilters = params.q || params.orgao || params.tipo || params.data_inicio || params.data_fim;
+    const hasFilters = params.q || params.tipo || params.data_inicio || params.data_fim;
     const endpoint = hasFilters ? '/materias/search/' : '/materias/';
     
     const { tipo, ...rest } = params;
@@ -113,16 +111,6 @@ export const MateriaService = {
   },
   getMateria: async (id: number) => {
     const response = await api.get<Materia>(`/materias/${id}`);
-    return response.data;
-  },
-  getStatsOrgaos: async (limit = 20) => {
-    const response = await api.get<StatsOrgao[]>('/materias/estatisticas/orgaos', {
-      params: { limit },
-    });
-    return response.data;
-  },
-  getStatsTipos: async () => {
-    const response = await api.get<StatsOrgao[]>('/materias/estatisticas/tipos');
     return response.data;
   },
   getFilterOptions: async () => {

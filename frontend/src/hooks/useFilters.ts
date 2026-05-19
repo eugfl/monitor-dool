@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 
 export interface FilterState {
   q: string;
-  orgao: string;
   tipo: string;
   dateMode: 'single' | 'range';
   data_inicio: string;
@@ -11,7 +10,6 @@ export interface FilterState {
 
 export const defaultFilters: FilterState = {
   q: '',
-  orgao: 'all',
   tipo: 'all',
   dateMode: 'single',
   data_inicio: '',
