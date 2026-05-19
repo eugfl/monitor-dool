@@ -101,6 +101,7 @@ class PipelineService:
                             materia_id_original=res["id"],
                             titulo=res["titulo"],
                             texto=res["texto"],
+                            conteudo_html=res["conteudo_html"],
                             orgao=res["orgao"],
                             tipo_documental=res["tipo_documental"],
                             entidades=res["entidades"],
@@ -137,6 +138,7 @@ class PipelineService:
             try:
                 html = await collector.baixar_materia_html(materia_id)
                 texto = parser.extrair_texto_materia(html)
+                conteudo_html = parser.extrair_html_materia(html)
                 orgao = enricher.detectar_orgao(texto)
                 tipo = enricher.detectar_tipo_documental(materia_info["titulo"], texto)
                 entidades = enricher.extrair_entidades(texto)
@@ -145,6 +147,7 @@ class PipelineService:
                     "id": materia_id,
                     "titulo": materia_info["titulo"],
                     "texto": texto,
+                    "conteudo_html": conteudo_html,
                     "orgao": orgao,
                     "tipo_documental": tipo,
                     "entidades": entidades,

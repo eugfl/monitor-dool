@@ -58,6 +58,7 @@ class Materia(Base):
     # Conteúdo
     titulo = Column(Text, nullable=False)
     texto = Column(Text, nullable=False)
+    conteudo_html = Column(Text)
 
     # Metadados extraídos
     orgao = Column(String(200), index=True)

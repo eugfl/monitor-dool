@@ -23,6 +23,9 @@ class MateriaResponse(MateriaResumo):
 
     edicao_id: int = Field(..., description="ID da edição à qual pertence")
     texto: str = Field(..., description="Texto completo da matéria")
+    conteudo_html: Optional[str] = Field(
+        None, description="HTML preservado para exibição rica da matéria"
+    )
     entidades: Optional[dict[str, Any]] = Field(
         None, description="Entidades extraídas (CPF, CNPJ, valores, etc.)"
     )
