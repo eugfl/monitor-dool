@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     app_name: str = "Monitor DOOL"
     app_env: str = "development"
     debug: bool = True
+    admin_api_key: str | None = None
 
     # Database
     postgres_user: str = "monitor_dool_user"

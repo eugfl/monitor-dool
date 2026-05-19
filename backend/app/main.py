@@ -4,11 +4,12 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import Depends, FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app.core.config import settings
+from app.core.security import require_admin_api_key
 from app.services.pipeline import PipelineService
 from app.api.v1.api import api_router
 from app.tasks.scheduler import iniciar_scheduler, parar_scheduler
@@ -107,7 +108,7 @@ async def health_check() -> dict:
     return {"status": "ok", "version": "1.0.0"}
 
 
-@app.post("/pipeline/run/{data}", tags=["Pipeline"])
+@app.post("/pipeline/run/{data}", tags=["Pipeline"], dependencies=[Depends(require_admin_api_key)])
 async def run_pipeline(data: str, background_tasks: BackgroundTasks) -> dict:
     """
     Inicia o processamento de uma data específica em background.

@@ -17,7 +17,7 @@ class PipelineService:
         self.limits = httpx.Limits(max_connections=50, max_keepalive_connections=20)
         self.headers = {"User-Agent": settings.user_agent}
 
-    async def processar_dia(self, data_str: str) -> None:
+    async def processar_dia(self, data_str: str) -> dict[str, int | str | None]:
         """
         Orquestra a coleta e processamento de todas as matérias de um dia.
 
@@ -47,7 +47,12 @@ class PipelineService:
             edicao_data = await collector.buscar_edicao(data_str)
             if not edicao_data:
                 logger.warning(f"Nenhuma edição encontrada para {data_str}")
-                return
+                return {
+                    "status": "no_edition",
+                    "message": f"Nenhuma edicao encontrada para {data_str}.",
+                    "edicao_id": None,
+                    "materias_novas": 0,
+                }
 
             edicao_id = edicao_data["id"]
             logger.info(f"Edição encontrada: ID={edicao_id}")
@@ -118,6 +123,12 @@ class PipelineService:
                     f"Processamento concluído: {novas} matérias novas salvas "
                     f"(edição ID={db_edicao.id})"
                 )
+                return {
+                    "status": "success",
+                    "message": f"Coleta de {data_str} concluida com {novas} materias novas.",
+                    "edicao_id": db_edicao.id,
+                    "materias_novas": novas,
+                }
 
     async def _processar_materia(
         self,
