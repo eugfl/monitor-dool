@@ -175,6 +175,37 @@ async def obter_estatisticas_orgaos(db: AsyncSession, limit: int = 10):
     return [{"label": row[0], "value": row[1]} for row in result.all()]
 
 
+async def obter_resumo_dashboard(db: AsyncSession):
+    """Resumo consolidado para a dashboard."""
+    totals_result = await db.execute(
+        select(
+            func.count(Materia.id),
+            func.count(func.distinct(Edicao.id)),
+            func.count(func.distinct(Materia.orgao)),
+            func.max(Edicao.created_at),
+        )
+        .select_from(Edicao)
+        .outerjoin(Materia, Materia.edicao_id == Edicao.id)
+    )
+    total_materias, total_edicoes, total_orgaos, ultima_coleta_em = totals_result.one()
+
+    latest_result = await db.execute(
+        select(Edicao.data, Edicao.numero)
+        .order_by(Edicao.data.desc(), Edicao.created_at.desc())
+        .limit(1)
+    )
+    latest = latest_result.one_or_none()
+
+    return {
+        "total_materias": total_materias or 0,
+        "total_edicoes": total_edicoes or 0,
+        "total_orgaos": total_orgaos or 0,
+        "ultima_edicao_data": latest[0] if latest else None,
+        "ultima_edicao_numero": latest[1] if latest else None,
+        "ultima_coleta_em": ultima_coleta_em,
+    }
+
+
 async def atualizar_total_materias(db: AsyncSession, edicao_id: int):
     """Atualizar contador de matérias da edição usando subquery atômica"""
     subquery = (

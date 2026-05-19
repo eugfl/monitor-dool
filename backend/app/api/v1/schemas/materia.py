@@ -1,41 +1,54 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
 
 class MateriaResumo(BaseModel):
-    """Schema resumido de matéria para listagem/timeline (sem texto completo)."""
+    """Schema resumido de materia para listagem/timeline."""
 
-    id: int = Field(..., description="ID interno da matéria")
+    id: int = Field(..., description="ID interno da materia")
     materia_id_original: str = Field(..., description="ID original do DOOL")
-    titulo: str = Field(..., description="Título da matéria")
-    orgao: Optional[str] = Field(None, description="Órgão publicador detectado")
+    titulo: str = Field(..., description="Titulo da materia")
+    orgao: Optional[str] = Field(None, description="Orgao publicador detectado")
     tipo_documental: str = Field(..., description="Tipo documental classificado")
-    url: Optional[str] = Field(None, description="URL da matéria no DOOL")
+    url: Optional[str] = Field(None, description="URL da materia no DOOL")
     created_at: datetime = Field(..., description="Data de processamento pelo sistema")
 
     model_config = {"from_attributes": True}
 
 
 class MateriaResponse(MateriaResumo):
-    """Schema completo de matéria incluindo texto e entidades extraídas."""
+    """Schema completo de materia incluindo texto e entidades extraidas."""
 
-    edicao_id: int = Field(..., description="ID da edição à qual pertence")
-    texto: str = Field(..., description="Texto completo da matéria")
+    edicao_id: int = Field(..., description="ID da edicao a qual pertence")
+    texto: str = Field(..., description="Texto completo da materia")
     conteudo_html: Optional[str] = Field(
-        None, description="HTML preservado para exibição rica da matéria"
+        None, description="HTML preservado para exibicao rica da materia"
     )
     entidades: Optional[dict[str, Any]] = Field(
-        None, description="Entidades extraídas (CPF, CNPJ, valores, etc.)"
+        None, description="Entidades extraidas (CPF, CNPJ, valores, etc.)"
     )
-    updated_at: Optional[datetime] = Field(None, description="Última atualização")
+    updated_at: Optional[datetime] = Field(None, description="Ultima atualizacao")
 
     model_config = {"from_attributes": True}
 
 
 class EstatisticaItem(BaseModel):
-    """Item de estatística agregada (label + contagem)."""
+    """Item de estatistica agregada (label + contagem)."""
 
-    label: Optional[str] = Field(None, description="Nome do grupo (tipo ou órgão)")
-    value: int = Field(..., description="Contagem de matérias")
+    label: Optional[str] = Field(None, description="Nome do grupo (tipo ou orgao)")
+    value: int = Field(..., description="Contagem de materias")
+
+
+class DashboardResumo(BaseModel):
+    """Resumo consolidado para os cards principais da dashboard."""
+
+    total_materias: int = Field(0, description="Total de materias processadas")
+    total_edicoes: int = Field(0, description="Total de edicoes processadas")
+    total_orgaos: int = Field(0, description="Total de orgaos identificados")
+    ultima_edicao_data: Optional[date] = Field(None, description="Data da edicao mais recente")
+    ultima_edicao_numero: Optional[int] = Field(None, description="Numero da edicao mais recente")
+    ultima_coleta_em: Optional[datetime] = Field(
+        None, description="Data/hora da ultima coleta registrada"
+    )

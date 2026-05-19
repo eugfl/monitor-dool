@@ -4,7 +4,12 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.schemas.materia import EstatisticaItem, MateriaResponse, MateriaResumo
+from app.api.v1.schemas.materia import (
+    DashboardResumo,
+    EstatisticaItem,
+    MateriaResponse,
+    MateriaResumo,
+)
 from app.database import crud
 from app.database.database import get_db
 
@@ -60,6 +65,14 @@ async def estatisticas_por_orgao(
 ) -> List[EstatisticaItem]:
     """Insights: top órgãos que mais publicam no DOOL."""
     return await crud.obter_estatisticas_orgaos(db, limit=limit)
+
+
+@router.get("/estatisticas/resumo", response_model=DashboardResumo)
+async def resumo_dashboard(
+    db: AsyncSession = Depends(get_db),
+) -> DashboardResumo:
+    """Resumo consolidado para os cards principais da dashboard."""
+    return await crud.obter_resumo_dashboard(db)
 
 
 @router.get("/{id}", response_model=MateriaResponse)
