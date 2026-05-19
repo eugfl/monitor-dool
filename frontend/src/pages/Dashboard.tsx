@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
@@ -9,12 +10,13 @@ import { RecentEditions } from '@/components/dashboard/RecentEditions';
 import { TimelineSection } from '@/components/dashboard/TimelineSection';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useFilters } from '@/hooks/useFilters';
+import { defaultFilters, type FilterState, useFilters } from '@/hooks/useFilters';
 import { EdicaoService, MateriaService, getApiErrorMessage, isApiNotFound } from '@/services/api';
 import { formatDateShort } from '@/utils/formatters';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const finalCollectionStatuses = new Set(['success', 'no_edition', 'failed']);
+const filterKeys = ['q', 'orgao', 'tipo', 'dateMode', 'data_inicio', 'data_fim'] as const;
 
 function getTodayISO() {
   const today = new Date();
@@ -22,7 +24,48 @@ function getTodayISO() {
   return new Date(today.getTime() - timezoneOffset).toISOString().slice(0, 10);
 }
 
+function getFiltersFromSearchParams(searchParams: URLSearchParams): FilterState {
+  const dateMode = searchParams.get('dateMode') === 'range' ? 'range' : 'single';
+
+  return {
+    q: searchParams.get('q') || defaultFilters.q,
+    orgao: searchParams.get('orgao') || defaultFilters.orgao,
+    tipo: searchParams.get('tipo') || defaultFilters.tipo,
+    dateMode,
+    data_inicio: searchParams.get('data_inicio') || defaultFilters.data_inicio,
+    data_fim: dateMode === 'range' ? searchParams.get('data_fim') || defaultFilters.data_fim : '',
+  };
+}
+
+function getPageFromSearchParams(searchParams: URLSearchParams) {
+  const page = Number(searchParams.get('page') || '1');
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
+function buildDashboardSearchParams(filters: FilterState, page: number) {
+  const params = new URLSearchParams();
+
+  filterKeys.forEach((key) => {
+    const value = filters[key];
+    if (!value || value === defaultFilters[key]) return;
+    params.set(key, value);
+  });
+
+  if (page > 1) {
+    params.set('page', String(page));
+  }
+
+  return params;
+}
+
+function areFiltersEqual(left: FilterState, right: FilterState) {
+  return filterKeys.every((key) => left[key] === right[key]);
+}
+
 export function Dashboard() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [initialFilters] = useState(() => getFiltersFromSearchParams(searchParams));
+  const [initialPage] = useState(() => getPageFromSearchParams(searchParams));
   const {
     stats,
     latestMaterias,
@@ -33,12 +76,14 @@ export function Dashboard() {
     currentPage,
     availableOrgaos,
     availableTipos,
-  } = useDashboard();
+  } = useDashboard(initialFilters, initialPage);
 
-  const { filters, updateFilter, resetFilters } = useFilters();
+  const { filters, updateFilter, replaceFilters, resetFilters } = useFilters(initialFilters);
   const [isCollecting, setIsCollecting] = useState(false);
   const [collectionMsg, setCollectionMsg] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const filtersRef = useRef(filters);
+  const currentPageRef = useRef(currentPage);
+  const skipNextUrlSync = useRef(false);
   const didRunSearchEffect = useRef(false);
   const didCheckTodayCollection = useRef(false);
   const todayISO = getTodayISO();
@@ -64,11 +109,38 @@ export function Dashboard() {
     filtersRef.current = filters;
   }, [filters]);
 
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+
+  const updateUrlState = useCallback((nextFilters: FilterState, page = 1, replace = false) => {
+    skipNextUrlSync.current = true;
+    setSearchParams(buildDashboardSearchParams(nextFilters, page), { replace });
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    if (skipNextUrlSync.current) {
+      skipNextUrlSync.current = false;
+      return;
+    }
+
+    const nextFilters = getFiltersFromSearchParams(searchParams);
+    const nextPage = getPageFromSearchParams(searchParams);
+
+    if (areFiltersEqual(nextFilters, filtersRef.current) && nextPage === currentPageRef.current) {
+      return;
+    }
+
+    replaceFilters(nextFilters);
+    refresh(nextFilters, nextPage);
+  }, [replaceFilters, refresh, searchParams]);
+
   const debouncedSearch = useDebounce(filters.q, 500);
 
   const handleApplyFilters = useCallback((page = 1) => {
+    updateUrlState(filtersRef.current, page);
     refresh(filtersRef.current, page);
-  }, [refresh]);
+  }, [refresh, updateUrlState]);
 
   useEffect(() => {
     if (!didRunSearchEffect.current) {
@@ -76,8 +148,10 @@ export function Dashboard() {
       return;
     }
 
-    refresh({ ...filtersRef.current, q: debouncedSearch }, 1);
-  }, [debouncedSearch, refresh]);
+    const nextFilters = { ...filtersRef.current, q: debouncedSearch };
+    updateUrlState(nextFilters, 1, true);
+    refresh(nextFilters, 1);
+  }, [debouncedSearch, refresh, updateUrlState]);
 
   const waitForCollectionStatus = useCallback(async (jobId: string) => {
     for (let attempt = 0; attempt < 30; attempt += 1) {
@@ -177,8 +251,15 @@ export function Dashboard() {
     await collectEdition(filters.data_inicio, filters.data_fim || undefined, 'manual');
   };
 
+  const handleResetFilters = () => {
+    resetFilters();
+    updateUrlState(defaultFilters, 1);
+    refresh(defaultFilters, 1);
+  };
+
   const handlePageChange = (newPage: number) => {
     if (newPage < 1) return;
+    updateUrlState(filters, newPage);
     refresh(filters, newPage);
     document.querySelector('.custom-scrollbar')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -191,7 +272,7 @@ export function Dashboard() {
         <Filters
           filters={filters}
           updateFilter={updateFilter}
-          resetFilters={resetFilters}
+          resetFilters={handleResetFilters}
           onApply={() => handleApplyFilters(1)}
           availableOrgaos={availableOrgaos}
           availableTipos={availableTipos}
@@ -224,7 +305,7 @@ export function Dashboard() {
             onApplyFilters={handleApplyFilters}
             onCollectSelectedDate={handleTriggerColeta}
             onCollectToday={() => collectEdition(todayISO, undefined, 'manual')}
-            onResetFilters={resetFilters}
+            onResetFilters={handleResetFilters}
             onPageChange={handlePageChange}
           />
         </div>

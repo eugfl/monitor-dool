@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 export interface FilterState {
   q: string;
@@ -9,14 +9,19 @@ export interface FilterState {
   data_fim: string;
 }
 
-export function useFilters() {
+export const defaultFilters: FilterState = {
+  q: '',
+  orgao: 'all',
+  tipo: 'all',
+  dateMode: 'single',
+  data_inicio: '',
+  data_fim: '',
+};
+
+export function useFilters(initialFilters: FilterState = defaultFilters) {
   const [filters, setFilters] = useState<FilterState>({
-    q: '',
-    orgao: 'all',
-    tipo: 'all',
-    dateMode: 'single',
-    data_inicio: '',
-    data_fim: '',
+    ...defaultFilters,
+    ...initialFilters,
   });
 
   const updateFilter = useCallback((key: keyof FilterState, value: string) => {
@@ -27,20 +32,22 @@ export function useFilters() {
     }));
   }, []);
 
-  const resetFilters = useCallback(() => {
+  const replaceFilters = useCallback((nextFilters: FilterState) => {
     setFilters({
-      q: '',
-      orgao: 'all',
-      tipo: 'all',
-      dateMode: 'single',
-      data_inicio: '',
-      data_fim: '',
+      ...defaultFilters,
+      ...nextFilters,
+      ...(nextFilters.dateMode === 'single' ? { data_fim: '' } : {}),
     });
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setFilters(defaultFilters);
   }, []);
 
   return {
     filters,
     updateFilter,
+    replaceFilters,
     resetFilters,
   };
 }

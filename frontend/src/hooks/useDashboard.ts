@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { DashboardStats, Edicao, Materia } from '@/types';
 import { EdicaoService, MateriaService, getApiErrorMessage } from '@/services/api';
 import type { FilterState } from './useFilters';
 
-export function useDashboard() {
+export function useDashboard(initialFilters?: FilterState, initialPage = 1) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [latestMaterias, setMaterias] = useState<Materia[]>([]);
   const [edicoes, setEdicoes] = useState<Edicao[]>([]);
@@ -14,6 +14,8 @@ export function useDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+  const initialFiltersRef = useRef(initialFilters);
+  const initialPageRef = useRef(initialPage);
 
   const fetchDashboardData = useCallback(async (isInitial = false, filterState?: FilterState, page = 1) => {
     try {
@@ -53,7 +55,7 @@ export function useDashboard() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchDashboardData(true);
+    fetchDashboardData(true, initialFiltersRef.current, initialPageRef.current);
   }, [fetchDashboardData]);
 
   const refresh = useCallback((filters?: FilterState, page = 1) => {
