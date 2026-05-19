@@ -1,12 +1,13 @@
 import { useDashboard } from '@/hooks/useDashboard';
 import { useFilters } from '@/hooks/useFilters';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Filters } from '@/components/dashboard/Filters';
 import { MateriaCard } from '@/components/dashboard/MateriaCard';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, LayoutList, ShieldCheck, CalendarDays, ExternalLink, RefreshCw, SearchX, Database, FileText } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { MateriaService } from '@/services/api';
 import { formatDateLong } from '@/utils/formatters';
 
@@ -25,14 +26,33 @@ export function Dashboard() {
   const { filters, updateFilter, resetFilters } = useFilters();
   const [isCollecting, setIsCollecting] = useState(false);
   const [collectionMsg, setCollectionMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const filtersRef = useRef(filters);
+  const didRunSearchEffect = useRef(false);
 
   useEffect(() => {
     document.title = "Dashboard | Monitor DOOL";
   }, []);
 
-  const handleApplyFilters = (page = 1) => {
-    refresh(filters, page);
-  };
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  // Debounce para busca textual
+  const debouncedSearch = useDebounce(filters.q, 500);
+
+  const handleApplyFilters = useCallback((page = 1) => {
+    refresh(filtersRef.current, page);
+  }, [refresh]);
+
+  useEffect(() => {
+    // Só dispara se houver texto ou se o texto foi limpo (mas ignorando o mount inicial)
+    if (!didRunSearchEffect.current) {
+      didRunSearchEffect.current = true;
+      return;
+    }
+
+    refresh({ ...filtersRef.current, q: debouncedSearch }, 1);
+  }, [debouncedSearch, refresh]);
 
   const handleTriggerColeta = async () => {
     if (!filters.data_inicio) return;
@@ -44,7 +64,8 @@ export function Dashboard() {
       setCollectionMsg({ type: 'success', text: res.message });
       // Refresh after a delay to see if data appeared
       setTimeout(() => refresh(filters), 5000);
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as { response?: { data?: { detail?: string } } };
       setCollectionMsg({ 
         type: 'error', 
         text: err.response?.data?.detail || "Erro ao iniciar coleta. Verifique a data e tente novamente." 
@@ -196,7 +217,6 @@ export function Dashboard() {
                           type="button"
                           className="w-full h-12 flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-primary/20 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
                           onClick={() => {
-                            console.log("WRAPPER CLICKED!");
                             handleTriggerColeta();
                           }}
                           disabled={isCollecting}

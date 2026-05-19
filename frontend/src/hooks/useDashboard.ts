@@ -78,6 +78,10 @@ export function useDashboard() {
     };
   }, [fetchDashboardData]);
 
+  const refresh = useCallback((filters?: FilterState, page = 1) => {
+    return fetchDashboardData(false, filters, page);
+  }, [fetchDashboardData]);
+
   return {
     stats,
     latestMaterias,
@@ -88,6 +92,6 @@ export function useDashboard() {
     error,
     currentPage,
     itemsPerPage: ITEMS_PER_PAGE,
-    refresh: (filters?: FilterState, page?: number) => fetchDashboardData(false, filters, page || 1)
+    refresh
   };
 }
