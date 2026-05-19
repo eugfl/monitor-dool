@@ -92,17 +92,23 @@
 }
 
 /* Materia Content Typography */
+.materia-content {
+  @apply max-w-full overflow-x-auto;
+}
 .materia-content table {
-  @apply w-full border-collapse my-6 text-sm overflow-x-auto block md:table;
+  @apply my-6 min-w-full border-collapse text-sm;
 }
 .materia-content th, .materia-content td {
-  @apply border border-border p-3 text-left;
+  @apply border border-border p-3 text-left align-top;
 }
 .materia-content th {
-  @apply bg-muted font-bold;
+  @apply bg-muted font-bold text-foreground;
 }
 .materia-content tr:nth-child(even) {
   @apply bg-muted/30;
+}
+.materia-content caption {
+  @apply mb-3 text-left text-sm font-semibold text-muted-foreground;
 }
 .materia-content p {
   @apply mb-4 leading-relaxed;

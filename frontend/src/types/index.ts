@@ -16,6 +16,7 @@ export interface Materia {
   created_at: string;
   edicao_id?: number;
   texto?: string;
+  conteudo_html?: string | null;
   entidades?: Record<string, EntityValue>;
   updated_at?: string;
 }

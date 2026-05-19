@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MateriaService, getApiErrorMessage } from '@/services/api';
 import type { EntityValue, Materia } from '@/types';
@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { AlertCircle, ChevronLeft, Calendar, Building2, Tag, FileText, Download, Share2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
+import DOMPurify from 'dompurify';
 
 export function MateriaDetail() {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +44,17 @@ export function MateriaDetail() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadMateria();
   }, [loadMateria]);
+
+  const conteudoHtml = materia?.conteudo_html;
+  const sanitizedMateriaHtml = useMemo(() => {
+    if (!conteudoHtml) {
+      return null;
+    }
+
+    return DOMPurify.sanitize(conteudoHtml, {
+      USE_PROFILES: { html: true },
+    });
+  }, [conteudoHtml]);
 
   if (loading) {
     return (
@@ -143,11 +155,17 @@ export function MateriaDetail() {
             <div className="bg-card border rounded-lg overflow-hidden shadow-inner bg-slate-50/30">
               <div className="h-[600px] overflow-y-auto p-8 md:p-10 custom-scrollbar">
                 <article className="prose prose-slate max-w-none prose-headings:font-heading prose-p:leading-relaxed prose-table:border prose-table:border-border prose-th:bg-muted/50 prose-th:p-2 prose-td:p-2 prose-td:border">
-                  {materia.texto ? (
+                  {sanitizedMateriaHtml ? (
                     <div
                       className="materia-content text-foreground font-serif text-lg"
-                      dangerouslySetInnerHTML={{ __html: materia.texto }}
+                      dangerouslySetInnerHTML={{ __html: sanitizedMateriaHtml }}
                     />
+                  ) : materia.texto ? (
+                    <div
+                      className="materia-content whitespace-pre-wrap text-foreground font-serif text-lg leading-relaxed"
+                    >
+                      {materia.texto}
+                    </div>
                   ) : (
                     <div className="py-20 text-center text-muted-foreground italic">
                       O conteúdo integral desta matéria está sendo processado ou não possui texto disponível.
