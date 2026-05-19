@@ -13,6 +13,8 @@ export interface Materia {
   orgao: string | null;
   tipo_documental: string;
   url: string | null;
+  edicao_data?: string | null;
+  edicao_numero?: number | null;
   created_at: string;
   edicao_id?: number;
   texto?: string;

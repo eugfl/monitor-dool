@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, update, and_
+from sqlalchemy.orm import selectinload
 from app.database.models import Edicao, Materia
 from typing import List, Optional
 from datetime import date
@@ -93,7 +94,9 @@ async def criar_materia(
 
 async def buscar_materia_por_id(db: AsyncSession, id: int) -> Optional[Materia]:
     """Buscar matéria por ID interno"""
-    result = await db.execute(select(Materia).where(Materia.id == id))
+    result = await db.execute(
+        select(Materia).options(selectinload(Materia.edicao)).where(Materia.id == id)
+    )
     return result.scalar_one_or_none()
 
 
@@ -123,7 +126,7 @@ async def buscar_materias(
     offset: int = 0
 ) -> List[Materia]:
     """Busca avançada de matérias com FTS e filtros"""
-    query = select(Materia).join(Edicao)
+    query = select(Materia).options(selectinload(Materia.edicao)).join(Edicao)
 
     filters = []
 
@@ -147,8 +150,7 @@ async def buscar_materias(
     if filters:
         query = query.where(and_(*filters))
 
-    query = query.order_by(Materia.created_at.desc()
-                           ).limit(limit).offset(offset)
+    query = query.order_by(Edicao.data.desc(), Materia.id.desc()).limit(limit).offset(offset)
 
     result = await db.execute(query)
     return result.scalars().all()

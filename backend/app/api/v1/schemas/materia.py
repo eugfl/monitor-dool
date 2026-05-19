@@ -13,6 +13,8 @@ class MateriaResumo(BaseModel):
     orgao: Optional[str] = Field(None, description="Orgao publicador detectado")
     tipo_documental: str = Field(..., description="Tipo documental classificado")
     url: Optional[str] = Field(None, description="URL da materia no DOOL")
+    edicao_data: Optional[date] = Field(None, description="Data de publicacao da edicao")
+    edicao_numero: Optional[int] = Field(None, description="Numero da edicao no DOOL")
     created_at: datetime = Field(..., description="Data de processamento pelo sistema")
 
     model_config = {"from_attributes": True}

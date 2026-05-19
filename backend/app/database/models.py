@@ -80,6 +80,14 @@ class Materia(Base):
     # Relacionamento
     edicao = relationship("Edicao", back_populates="materias")
 
+    @property
+    def edicao_data(self):
+        return self.edicao.data if self.edicao else None
+
+    @property
+    def edicao_numero(self):
+        return self.edicao.numero if self.edicao else None
+
     __table_args__ = (
         Index("idx_materia_edicao_tipo", "edicao_id", "tipo_documental"),
         Index("idx_materia_edicao_orgao", "edicao_id", "orgao"),

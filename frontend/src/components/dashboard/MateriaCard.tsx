@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Materia } from '@/types';
+import { formatDateShort } from '@/utils/formatters';
 
 interface MateriaCardProps {
   materia: Materia;
@@ -28,6 +29,7 @@ export function MateriaCard({ materia, idx }: MateriaCardProps) {
   };
 
   const info = getReadableType(materia.tipo_documental);
+  const publicationDate = materia.edicao_data || materia.created_at;
 
   return (
     <motion.div 
@@ -48,7 +50,7 @@ export function MateriaCard({ materia, idx }: MateriaCardProps) {
           </div>
         </div>
         <span className="text-[10px] font-medium text-muted-foreground">
-          {new Date(materia.created_at).toLocaleDateString('pt-BR')}
+          {formatDateShort(publicationDate)}
         </span>
       </div>
       <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-2 text-sm md:text-base leading-snug">

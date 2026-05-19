@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { AlertCircle, ChevronLeft, Calendar, Building2, Tag, FileText, Download, Share2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
+import { formatDateLong, formatDateShort } from '@/utils/formatters';
 import DOMPurify from 'dompurify';
 
 export function MateriaDetail() {
@@ -46,6 +47,7 @@ export function MateriaDetail() {
   }, [loadMateria]);
 
   const conteudoHtml = materia?.conteudo_html;
+  const publicationDate = materia?.edicao_data || materia?.created_at;
   const sanitizedMateriaHtml = useMemo(() => {
     if (!conteudoHtml) {
       return null;
@@ -131,7 +133,7 @@ export function MateriaDetail() {
                 </span>
                 <span className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {new Date(materia.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  {publicationDate ? formatDateLong(publicationDate) : 'Data não informada'}
                 </span>
               </div>
 
@@ -226,7 +228,7 @@ export function MateriaDetail() {
           <div className="p-6 bg-primary/5 rounded-xl border border-primary/10">
             <h4 className="font-bold text-sm mb-2">Sobre esta publicação</h4>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Esta matéria foi publicada na edição de {new Date(materia.created_at).toLocaleDateString()} e processada pela nossa inteligência jurídica para facilitar a sua leitura e análise estratégica.
+              Esta matéria foi publicada na edição de {publicationDate ? formatDateShort(publicationDate) : 'data não informada'} e processada pela nossa inteligência jurídica para facilitar a sua leitura e análise estratégica.
             </p>
           </div>
         </aside>
