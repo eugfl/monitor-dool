@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
+import { Toaster } from '@/components/sonner';
 import { Dashboard } from '@/pages/Dashboard';
 import { MateriaDetail } from '@/pages/MateriaDetail';
 
@@ -14,6 +15,7 @@ function App() {
           </Routes>
         </main>
       </Layout>
+      <Toaster />
     </Router>
   );
 }
