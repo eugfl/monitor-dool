@@ -6,7 +6,6 @@ from loguru import logger
 
 from app.database.database import AsyncSessionLocal
 from app.services.pipeline import PipelineService
-from app.core.config import settings
 
 
 # =========================================================
