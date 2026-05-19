@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DashboardSummary } from '@/components/dashboard/DashboardSummary';
-import { FeedbackBanner } from '@/components/dashboard/FeedbackBanner';
 import { Filters } from '@/components/dashboard/Filters';
 import { RecentEditions } from '@/components/dashboard/RecentEditions';
 import { TimelineSection } from '@/components/dashboard/TimelineSection';
@@ -12,7 +11,6 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useDebounce } from '@/hooks/useDebounce';
 import { defaultFilters, type FilterState, useFilters } from '@/hooks/useFilters';
 import { EdicaoService, MateriaService, getApiErrorMessage, isApiNotFound } from '@/services/api';
-import { formatDateShort } from '@/utils/formatters';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const finalCollectionStatuses = new Set(['success', 'no_edition', 'failed']);
@@ -89,12 +87,12 @@ export function Dashboard() {
 
   const { filters, updateFilter, replaceFilters, resetFilters } = useFilters(initialFilters);
   const [isCollecting, setIsCollecting] = useState(false);
-  const [collectionMsg, setCollectionMsg] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const filtersRef = useRef(filters);
   const currentPageRef = useRef(currentPage);
   const skipNextUrlSync = useRef(false);
   const didRunSearchEffect = useRef(false);
   const didCheckTodayCollection = useRef(false);
+  const lastErrorToastRef = useRef<string | null>(null);
   const todayISO = getTodayISO();
   const todayLabel = new Date(`${todayISO}T12:00:00`).toLocaleDateString('pt-BR');
 
@@ -108,11 +106,16 @@ export function Dashboard() {
       minute: '2-digit',
     })
     : 'Sem coleta';
-  const latestEditionLabel = stats?.ultima_edicao_data ? formatDateShort(stats.ultima_edicao_data) : '--';
 
   useEffect(() => {
     document.title = 'Dashboard | Monitor DOOL';
   }, []);
+
+  useEffect(() => {
+    if (!error || lastErrorToastRef.current === error) return;
+    lastErrorToastRef.current = error;
+    toast.error(error);
+  }, [error]);
 
   useEffect(() => {
     filtersRef.current = filters;
@@ -181,12 +184,6 @@ export function Dashboard() {
 
     const loadingToast = toast.loading(dataFim ? 'Coletando período selecionado...' : 'Coletando edição...');
     setIsCollecting(true);
-    setCollectionMsg({
-      type: 'info',
-      text: dataFim
-        ? `Coletando edições de ${dataInicio} até ${dataFim}. Isso pode levar alguns instantes.`
-        : `Coletando edição de ${dataInicio}. A timeline será atualizada automaticamente.`,
-    });
 
     try {
       const res = await MateriaService.triggerColeta(dataInicio, dataFim);
@@ -196,29 +193,19 @@ export function Dashboard() {
       toast.dismiss(loadingToast);
 
       if (finalStatus?.status === 'no_edition' && source === 'auto') {
-        const message = `Hoje (${todayLabel}) não tivemos Diário Oficial. Exibindo edições anteriores.`;
-        setCollectionMsg({ type: 'info', text: message });
-        toast.info(message);
+        toast.info(`Hoje (${todayLabel}) não tivemos Diário Oficial. Exibindo edições anteriores.`);
         return;
       }
 
       if (!finalStatus) {
-        const message = 'A coleta ainda está em andamento. A timeline foi atualizada com os dados disponíveis.';
-        setCollectionMsg({ type: 'info', text: message });
-        toast.info(message);
+        toast.info('A coleta ainda está em andamento. A timeline foi atualizada com os dados disponíveis.');
         return;
       }
 
       if (finalStatus.status === 'failed') {
-        setCollectionMsg({ type: 'error', text: finalStatus.message });
         toast.error(finalStatus.message);
         return;
       }
-
-      setCollectionMsg({
-        type: finalStatus.status === 'no_edition' ? 'info' : 'success',
-        text: finalStatus.message,
-      });
 
       if (finalStatus.status === 'no_edition') {
         toast.info(finalStatus.message);
@@ -227,9 +214,7 @@ export function Dashboard() {
       }
     } catch (err) {
       toast.dismiss(loadingToast);
-      const message = getApiErrorMessage(err, 'Erro ao iniciar coleta. Verifique a data e tente novamente.');
-      setCollectionMsg({ type: 'error', text: message });
-      toast.error(message);
+      toast.error(getApiErrorMessage(err, 'Erro ao iniciar coleta. Verifique a data e tente novamente.'));
     } finally {
       setIsCollecting(false);
     }
@@ -248,9 +233,7 @@ export function Dashboard() {
           return;
         }
 
-        const message = getApiErrorMessage(err, 'Não foi possível verificar a edição de hoje.');
-        setCollectionMsg({ type: 'error', text: message });
-        toast.error(message);
+        toast.error(getApiErrorMessage(err, 'Não foi possível verificar a edição de hoje.'));
       }
     }
 
@@ -276,8 +259,8 @@ export function Dashboard() {
   };
 
   return (
-    <div className="space-y-8">
-      <header className="mb-12 space-y-4">
+    <div className="space-y-6">
+      <header className="space-y-4">
         <DashboardHeader isBusy={loading || isCollecting} latestCollectionLabel={latestCollectionLabel} />
 
         <Filters
@@ -290,38 +273,26 @@ export function Dashboard() {
         />
       </header>
 
-      <FeedbackBanner
-        error={error}
-        loading={loading}
-        currentPage={currentPage}
-        collection={collectionMsg}
-        isCollecting={isCollecting}
-        onRetry={handleApplyFilters}
-      />
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="space-y-8 lg:col-span-2">
-          <DashboardSummary stats={stats} latestEditionLabel={latestEditionLabel} />
-
-          <TimelineSection
-            materias={latestMaterias}
-            loading={loading}
-            error={error}
-            currentPage={currentPage}
-            filters={filters}
-            hasDateFilter={hasDateFilter}
-            hasActiveFilters={hasActiveFilters}
-            isCollecting={isCollecting}
-            onApplyFilters={handleApplyFilters}
-            onCollectSelectedDate={handleTriggerColeta}
-            onCollectToday={() => collectEdition(todayISO, undefined, 'manual')}
-            onResetFilters={handleResetFilters}
-            onPageChange={handlePageChange}
-          />
-        </div>
-
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
+        <DashboardSummary stats={stats} />
         <RecentEditions edicoes={edicoes} />
-      </div>
+      </section>
+
+      <TimelineSection
+        materias={latestMaterias}
+        loading={loading}
+        error={error}
+        currentPage={currentPage}
+        filters={filters}
+        hasDateFilter={hasDateFilter}
+        hasActiveFilters={hasActiveFilters}
+        isCollecting={isCollecting}
+        onApplyFilters={handleApplyFilters}
+        onCollectSelectedDate={handleTriggerColeta}
+        onCollectToday={() => collectEdition(todayISO, undefined, 'manual')}
+        onResetFilters={handleResetFilters}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

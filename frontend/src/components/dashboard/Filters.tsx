@@ -37,37 +37,31 @@ export function Filters({
   const isRangeMode = filters.dateMode === 'range';
 
   return (
-    <div className="w-full bg-card border rounded-xl shadow-sm overflow-hidden mb-8">
-      <div className="p-4 md:p-6 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 w-full group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+    <div className="mb-6 w-full overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="flex flex-col gap-3 p-3 md:flex-row md:items-center">
+        <div className="group relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
           <Input
             placeholder="Pesquisar por órgão, pessoa, empresa, decreto..."
-            className="pl-10 h-11 bg-muted/30 border-muted-foreground/20 focus-visible:ring-primary/20"
+            className="h-10 bg-muted/30 pl-10"
             value={filters.q}
             onChange={(e) => updateFilter('q', e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onApply()}
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="flex-1 md:flex-none h-11 gap-2 border-muted-foreground/20"
+            className="h-10 flex-1 gap-2 md:flex-none"
             onClick={() => setIsExpanded(!isExpanded)}
           >
-            <Filter className="w-4 h-4" />
+            <Filter className="h-4 w-4" />
             Filtros
-            {hasActiveFilters && (
-              <span className="ml-1 w-2 h-2 bg-primary rounded-full" />
-            )}
+            {hasActiveFilters && <span className="h-2 w-2 rounded-full bg-primary" />}
           </Button>
 
-          <Button
-            className="flex-1 md:flex-none h-11 px-8 font-bold"
-            onClick={onApply}
-            disabled={isLoading}
-          >
+          <Button className="h-10 flex-1 px-6 font-bold md:flex-none" onClick={onApply} disabled={isLoading}>
             {isLoading ? 'Buscando...' : 'Buscar'}
           </Button>
         </div>
@@ -79,11 +73,11 @@ export function Filters({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-t bg-muted/5 overflow-hidden"
+            className="overflow-hidden border-t bg-muted/5"
           >
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tipo de Matéria</label>
+            <div className="grid grid-cols-1 gap-3 p-3 md:grid-cols-[220px_220px_1fr_auto] md:items-end">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipo</label>
                 <Select value={filters.tipo} onValueChange={(v) => updateFilter('tipo', v)}>
                   <SelectTrigger className="h-10 bg-card">
                     <SelectValue placeholder="Todos os tipos" />
@@ -99,64 +93,53 @@ export function Filters({
                 </Select>
               </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Data de publicação</label>
-                <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_1fr] gap-3 items-center">
-                  <Select value={filters.dateMode} onValueChange={(v) => updateFilter('dateMode', v)}>
-                    <SelectTrigger className="h-10 bg-card">
-                      <SelectValue placeholder="Tipo de busca" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="single">Buscar uma edição</SelectItem>
-                      <SelectItem value="range">Buscar mais de uma edição</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <div className="relative">
-                    <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                    <input
-                      type="date"
-                      className="w-full h-10 pl-8 pr-2 bg-card border border-input rounded-md text-xs focus:ring-1 focus:ring-primary outline-none"
-                      value={filters.data_inicio}
-                      onChange={(e) => updateFilter('data_inicio', e.target.value)}
-                    />
-                  </div>
-
-                  {isRangeMode && (
-                    <div className="relative">
-                      <Calendar className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                      <input
-                        type="date"
-                        className="w-full h-10 pl-8 pr-2 bg-card border border-input rounded-md text-xs focus:ring-1 focus:ring-primary outline-none"
-                        value={filters.data_fim}
-                        onChange={(e) => updateFilter('data_fim', e.target.value)}
-                      />
-                    </div>
-                  )}
-                </div>
-                <p className="text-[10px] text-muted-foreground">
-                  {isRangeMode ? 'Selecione a data inicial e final do período.' : 'Selecione uma data específica do Diário Oficial.'}
-                </p>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Período</label>
+                <Select value={filters.dateMode} onValueChange={(v) => updateFilter('dateMode', v)}>
+                  <SelectTrigger className="h-10 bg-card">
+                    <SelectValue placeholder="Tipo de busca" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">Uma edição</SelectItem>
+                    <SelectItem value="range">Mais de uma edição</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
 
-            <div className="px-6 py-4 bg-muted/10 border-t flex justify-between items-center gap-3">
-              <p className="text-[10px] text-muted-foreground italic">
-                * Para filtrar por órgão, secretaria, empresa ou pessoa, use a busca textual.
-              </p>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <DateInput value={filters.data_inicio} onChange={(value) => updateFilter('data_inicio', value)} />
+                {isRangeMode && (
+                  <DateInput value={filters.data_fim} onChange={(value) => updateFilter('data_fim', value)} />
+                )}
+              </div>
+
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs font-bold h-8 text-muted-foreground hover:text-destructive transition-colors"
+                className="h-10 justify-center text-xs font-bold text-muted-foreground hover:text-destructive"
                 onClick={resetFilters}
               >
-                <X className="w-3 h-3 mr-1" />
-                Limpar Filtros
+                <X className="mr-1 h-3.5 w-3.5" />
+                Limpar
               </Button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function DateInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="relative">
+      <Calendar className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+      <input
+        type="date"
+        className="h-10 w-full rounded-md border border-input bg-card pl-8 pr-2 text-xs outline-none focus:ring-1 focus:ring-primary"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   );
 }
