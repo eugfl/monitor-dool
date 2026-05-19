@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Monitor DOOL">
+  <rect width="64" height="64" rx="14" fill="#2563eb"/>
+  <path d="M20 15h20l8 8v26H20z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M39 15v10h9" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M26 34h16M26 42h11M26 26h7" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+</svg>
