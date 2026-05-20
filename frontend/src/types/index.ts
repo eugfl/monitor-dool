@@ -39,6 +39,7 @@ export interface Materia {
   texto?: string;
   conteudo_html?: string | null;
   entidades?: EntityExtractionResult | null;
+  pdf_disponivel?: boolean;
   updated_at?: string;
 }
 

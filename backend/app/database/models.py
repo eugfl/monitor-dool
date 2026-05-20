@@ -88,6 +88,24 @@ class Materia(Base):
     def edicao_numero(self):
         return self.edicao.numero if self.edicao else None
 
+    @property
+    def pdf_disponivel(self):
+        return (
+            self._parece_pdf_bruto(self.texto)
+            or self._parece_pdf_bruto(self.conteudo_html)
+            or bool(self.url and self.url.lower().endswith(".pdf"))
+        )
+
+    @staticmethod
+    def _parece_pdf_bruto(valor):
+        if not valor:
+            return False
+
+        sample = valor[:5000]
+        markers = ("%PDF-", "endobj", "xref", "trailer", "startxref", "%%EOF")
+        marker_count = sum(1 for marker in markers if marker.lower() in sample.lower())
+        return sample.lstrip().startswith("%PDF-") or marker_count >= 3
+
     __table_args__ = (
         Index("idx_materia_edicao_tipo", "edicao_id", "tipo_documental"),
         Index("idx_materia_edicao_orgao", "edicao_id", "orgao"),

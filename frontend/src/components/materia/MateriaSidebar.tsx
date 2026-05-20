@@ -1,6 +1,7 @@
-import { ExternalLink, Info } from 'lucide-react';
+import { Download, ExternalLink, Info } from 'lucide-react';
 
 import { Card } from '@/components/card';
+import { MateriaService } from '@/services/api';
 import type { Materia } from '@/types';
 import { formatDateShort } from '@/utils/formatters';
 import { MateriaEntities } from './MateriaEntities';
@@ -25,6 +26,17 @@ export function MateriaSidebar({ materia }: MateriaSidebarProps) {
           Publicada em {publicationDate ? formatDateShort(publicationDate) : 'data não informada'} e processada para busca, leitura técnica e identificação de entidades.
         </p>
       </Card>
+
+      {materia.pdf_disponivel && (
+        <a
+          href={MateriaService.getMateriaPdfUrl(materia.id)}
+          download
+          className="flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary px-4 py-3 text-xs font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+        >
+          Baixar PDF
+          <Download className="h-4 w-4" />
+        </a>
+      )}
 
       {materia.url && (
         <a

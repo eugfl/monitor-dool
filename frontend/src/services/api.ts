@@ -113,6 +113,7 @@ export const MateriaService = {
     const response = await api.get<Materia>(`/materias/${id}`);
     return response.data;
   },
+  getMateriaPdfUrl: (id: number) => `${API_BASE_URL.replace(/\/$/, '')}/materias/${id}/pdf`,
   getFilterOptions: async () => {
     const response = await api.get<FilterOptionsResponse>('/materias/filtros');
     return response.data;

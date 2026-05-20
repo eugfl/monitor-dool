@@ -31,6 +31,9 @@ class MateriaResponse(MateriaResumo):
     entidades: Optional[dict[str, Any]] = Field(
         None, description="Entidades extraidas (CPF, CNPJ, valores, etc.)"
     )
+    pdf_disponivel: bool = Field(
+        False, description="Indica se a materia possui arquivo PDF para download"
+    )
     updated_at: Optional[datetime] = Field(None, description="Ultima atualizacao")
 
     model_config = {"from_attributes": True}
