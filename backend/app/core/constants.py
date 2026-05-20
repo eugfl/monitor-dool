@@ -35,7 +35,7 @@ REGEX_PATTERNS = {
 
     # Contato
     "email": re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
-    "telefone": re.compile(r"\(?\d{2}\)?\s?\d{4,5}-?\d{4}"),
+    "telefone": re.compile(r"(?:\(?\d{2}\)?\s?)?(?:9\d{4}|\d{4})-\d{4}"),
 
     # Financeiro
     "valor_monetario": re.compile(r"R\$\s?\d{1,3}(?:\.\d{3})*(?:,\d{2})?"),

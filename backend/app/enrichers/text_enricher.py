@@ -73,6 +73,19 @@ SIGLAS_ORGAO = {
     "UNEB",
 }
 
+ENTIDADE_LABELS = {
+    "cpf": "CPF",
+    "cnpj": "CNPJ",
+    "processo_cnj": "Processo CNJ",
+    "email": "E-mail",
+    "telefone": "Telefone",
+    "valor_monetario": "Valor monetário",
+    "oab": "OAB",
+}
+
+ENTIDADES_MAX_ITEMS = 25
+PDF_MARKERS = ("%PDF-", "endobj", "xref", "trailer", "startxref", "%%EOF")
+
 
 def _normalizar(texto: str) -> str:
     texto_sem_acento = unicodedata.normalize("NFKD", texto)
@@ -84,6 +97,77 @@ def _normalizar(texto: str) -> str:
 
 def _limpar_linha(texto: str) -> str:
     return re.sub(r"\s+", " ", texto).strip(" -:\t")
+
+
+def _parece_pdf_bruto(texto: str) -> bool:
+    sample = texto[:5000]
+    sample_lower = sample.lower()
+    markers = sum(1 for marker in PDF_MARKERS if marker.lower() in sample_lower)
+    return sample.lstrip().startswith("%PDF-") or markers >= 3
+
+
+def _parece_texto_corrompido(texto: str) -> bool:
+    if not texto.strip():
+        return True
+
+    sample = texto[:3000]
+    if _parece_pdf_bruto(sample):
+        return True
+
+    control_chars = sum(1 for char in sample if ord(char) < 32 and char not in "\n\r\t")
+    replacement_chars = sample.count("�") + sample.count("ï¿½")
+    return control_chars > 20 or replacement_chars > 15
+
+
+def _normalizar_match(match: object) -> str:
+    if isinstance(match, tuple):
+        return "".join(str(part) for part in match if part)
+
+    return str(match)
+
+
+def _telefone_valido(value: str) -> bool:
+    digits = re.sub(r"\D", "", value)
+    if len(digits) not in {10, 11}:
+        return False
+
+    if len(set(digits)) <= 2:
+        return False
+
+    return not digits.startswith("000")
+
+
+def _valor_valido(value: str) -> bool:
+    digits = re.sub(r"\D", "", value)
+    return bool(digits) and int(digits) > 0
+
+
+def _entidade_valida(nome: str, value: str) -> bool:
+    if not value or len(value) > 120:
+        return False
+
+    if nome == "telefone":
+        return _telefone_valido(value)
+
+    if nome == "valor_monetario":
+        return _valor_valido(value)
+
+    return True
+
+
+def _deduplicar(values: list[str]) -> list[str]:
+    seen = set()
+    unique = []
+
+    for value in values:
+        normalized = re.sub(r"\s+", " ", value).strip()
+        if not normalized or normalized in seen:
+            continue
+
+        seen.add(normalized)
+        unique.append(normalized)
+
+    return unique
 
 
 class TextEnricher:
@@ -134,10 +218,51 @@ class TextEnricher:
         return "OUTROS"
 
     @staticmethod
-    def extrair_entidades(texto: str) -> dict[str, list[str]]:
-        entidades: dict[str, list[str]] = {}
+    def extrair_entidades(texto: str) -> dict:
+        if _parece_texto_corrompido(texto):
+            return {
+                "items": {},
+                "summary": {
+                    "status": "ignored",
+                    "reason": "raw_or_corrupted_content",
+                    "message": "Conteúdo bruto ou corrompido; entidades não extraídas.",
+                    "total": 0,
+                    "types": {},
+                },
+            }
+
+        items: dict[str, list[str]] = {}
         for nome, pattern in REGEX_PATTERNS.items():
-            matches = pattern.findall(texto)
-            if matches:
-                entidades[nome] = list(set(matches))
-        return entidades
+            matches = [_normalizar_match(match) for match in pattern.findall(texto)]
+            values = [
+                value
+                for value in _deduplicar(matches)
+                if _entidade_valida(nome, value)
+            ]
+
+            if values:
+                items[nome] = values[:ENTIDADES_MAX_ITEMS]
+
+        total = sum(len(values) for values in items.values())
+
+        return {
+            **items,
+            "items": items,
+            "summary": {
+                "status": "ok" if total else "empty",
+                "reason": None,
+                "message": (
+                    "Entidades extraídas com validação básica."
+                    if total
+                    else "Nenhuma entidade confiável foi identificada."
+                ),
+                "total": total,
+                "types": {
+                    name: {
+                        "label": ENTIDADE_LABELS.get(name, name),
+                        "count": len(values),
+                    }
+                    for name, values in items.items()
+                },
+            },
+        }

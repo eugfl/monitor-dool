@@ -34,3 +34,24 @@ def test_extrair_entidades():
     
     assert "valor_monetario" in entidades
     assert "R$ 1.500,00" in entidades["valor_monetario"]
+    assert entidades["summary"]["status"] == "ok"
+    assert entidades["summary"]["total"] == 3
+    assert entidades["summary"]["types"]["cnpj"]["label"] == "CNPJ"
+
+
+def test_extrair_entidades_ignora_pdf_bruto():
+    texto = "%PDF-1.7\n1 0 obj\nstream\n0000000219\nendobj\nxref\ntrailer\n%%EOF"
+    entidades = TextEnricher.extrair_entidades(texto)
+
+    assert entidades["items"] == {}
+    assert entidades["summary"]["status"] == "ignored"
+    assert entidades["summary"]["reason"] == "raw_or_corrupted_content"
+
+
+def test_extrair_entidades_filtra_telefone_invalido():
+    texto = "Contatos: 0000000219, 7199999-1234 e (71) 3333-4444."
+    entidades = TextEnricher.extrair_entidades(texto)
+
+    assert "0000000219" not in entidades.get("telefone", [])
+    assert "7199999-1234" in entidades["telefone"]
+    assert "(71) 3333-4444" in entidades["telefone"]
