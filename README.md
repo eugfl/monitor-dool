@@ -146,18 +146,18 @@ VITE_API_URL=http://localhost:8000/api/v1
 
 ## Endpoints principais
 
-| Metodo | Endpoint | Descricao |
-| --- | --- | --- |
-| `GET` | `/api/v1/edicoes/` | Lista edicoes coletadas |
-| `GET` | `/api/v1/edicoes/data/{data}` | Busca edicao por data |
-| `GET` | `/api/v1/materias/` | Lista materias paginadas |
-| `GET` | `/api/v1/materias/search/` | Busca com filtros |
-| `GET` | `/api/v1/materias/{id}` | Detalhe completo da materia |
-| `GET` | `/api/v1/materias/{id}/pdf` | Download do PDF quando disponivel |
-| `GET` | `/api/v1/materias/filtros` | Opcoes enxutas de filtros |
-| `GET` | `/api/v1/materias/estatisticas/resumo` | Resumo da dashboard |
-| `POST` | `/api/v1/tasks/coleta/{data}` | Dispara coleta manual |
-| `POST` | `/api/v1/tasks/jobs/{id}/run` | Executa job agendado manualmente |
+| Metodo | Endpoint                               | Descricao                         |
+| ------ | -------------------------------------- | --------------------------------- |
+| `GET`  | `/api/v1/edicoes/`                     | Lista edicoes coletadas           |
+| `GET`  | `/api/v1/edicoes/data/{data}`          | Busca edicao por data             |
+| `GET`  | `/api/v1/materias/`                    | Lista materias paginadas          |
+| `GET`  | `/api/v1/materias/search/`             | Busca com filtros                 |
+| `GET`  | `/api/v1/materias/{id}`                | Detalhe completo da materia       |
+| `GET`  | `/api/v1/materias/{id}/pdf`            | Download do PDF quando disponivel |
+| `GET`  | `/api/v1/materias/filtros`             | Opcoes enxutas de filtros         |
+| `GET`  | `/api/v1/materias/estatisticas/resumo` | Resumo da dashboard               |
+| `POST` | `/api/v1/tasks/coleta/{data}`          | Dispara coleta manual             |
+| `POST` | `/api/v1/tasks/jobs/{id}/run`          | Executa job agendado manualmente  |
 
 ## Endpoints administrativos
 
@@ -214,20 +214,3 @@ npm run test
 npm run lint
 npm run build
 ```
-
-## Fluxo de demo sugerido
-
-1. Abrir a dashboard.
-2. Buscar por `decreto`.
-3. Navegar pela paginacao.
-4. Abrir uma materia.
-5. Voltar e confirmar que busca/pagina foram preservadas.
-6. Abrir o historico de edicoes.
-7. Filtrar a timeline por uma edicao especifica.
-8. Abrir uma materia com tabela.
-9. Demonstrar download de PDF quando disponivel.
-10. Mostrar Swagger e endpoints administrativos protegidos.
-
-## Status
-
-O projeto esta pronto para demonstracao tecnica em portfolio, com frontend responsivo, backend com scheduler, seguranca basica para jobs administrativos e testes automatizados cobrindo os fluxos mais sensiveis.
