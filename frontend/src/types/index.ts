@@ -6,6 +6,25 @@ export type EntityValue =
   | EntityValue[]
   | { [key: string]: EntityValue };
 
+export interface EntityTypeSummary {
+  label: string;
+  count: number;
+}
+
+export interface EntityExtractionSummary {
+  status: 'ok' | 'empty' | 'ignored';
+  reason: string | null;
+  message: string;
+  total: number;
+  types: Record<string, EntityTypeSummary>;
+}
+
+export interface EntityExtractionResult {
+  items?: Record<string, string[]>;
+  summary?: EntityExtractionSummary;
+  [key: string]: EntityValue | Record<string, string[]> | EntityExtractionSummary | undefined;
+}
+
 export interface Materia {
   id: number;
   materia_id_original: string;
@@ -19,7 +38,7 @@ export interface Materia {
   edicao_id?: number;
   texto?: string;
   conteudo_html?: string | null;
-  entidades?: Record<string, EntityValue>;
+  entidades?: EntityExtractionResult | null;
   updated_at?: string;
 }
 
