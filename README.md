@@ -1,73 +1,169 @@
-# Monitor DOOL (Diário Oficial Online)
+# Monitor DOOL
 
-Pipeline de dados para monitoramento e análise das publicações do Diário Oficial.
+Dashboard informativo para monitoramento das publicacoes do Diario Oficial da Bahia.
 
-## 🏗️ Arquitetura
+O projeto combina um backend FastAPI com pipeline de coleta, parser HTML, enriquecimento de dados e uma interface React/Vite focada em busca, filtros, timeline e leitura tecnica das materias publicadas.
 
-O projeto segue uma arquitetura modularizada:
+## Screenshots
+
+### Dashboard
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Detalhe da materia
+
+![Detalhe da materia](docs/screenshots/materia-detail.png)
+
+## Principais funcionalidades
+
+- Timeline de materias com paginacao.
+- Busca textual com debounce e query string.
+- Filtros por tipo documental e data da edicao.
+- Historico de edicoes coletadas.
+- Pagina de detalhe com HTML sanitizado.
+- Renderizacao responsiva de tabelas das materias.
+- Download de PDF quando a fonte original disponibiliza arquivo.
+- Cards de resumo da base local.
+- Feedbacks com toast e estados de loading, empty e error.
+- Scheduler backend para coleta automatica.
+- Endpoints administrativos protegidos por API key.
+
+## Stack
+
+### Frontend
+
+- React
+- Vite
+- TypeScript
+- React Router
+- Axios
+- Tailwind CSS
+- Radix UI/shadcn-style components
+- Sonner
+- Vitest + Testing Library
+
+### Backend
+
+- FastAPI
+- SQLAlchemy Async
+- Alembic
+- PostgreSQL
+- httpx
+- selectolax
+- APScheduler
+- pytest
+
+## Arquitetura
 
 ```mermaid
 graph TD
-    A[APScheduler] -->|Dispara| B(Pipeline Service)
-    B -->|Busca Edição/Matéria| C[DOOL Collector]
-    C -.->|Download HTML| D((DOOL API))
-    B -->|Extrai Textos| E[DOOL Parser]
-    B -->|Classifica| F[Text Enricher]
-    B -->|Persiste| G[(PostgreSQL)]
-    
-    H[Frontend] -->|REST API| I[FastAPI Endpoints]
-    I -->|Consulta| G
+    A[APScheduler] --> B[Pipeline Service]
+    B --> C[DOOL Collector]
+    C --> D[DOOL API]
+    B --> E[HTML Parser]
+    B --> F[Text Enricher]
+    B --> G[(PostgreSQL)]
+    H[React Dashboard] --> I[FastAPI REST API]
+    I --> G
 ```
 
-- **Collectors**: Responsável pela comunicação com a API do DOOL e download de HTMLs.
-- **Parsers**: Extração de dados estruturados a partir do HTML usando `selectolax`.
-- **Enrichers**: Classificação de documentos e extração de entidades (CPF, CNPJ, etc).
-- **Services**: Orquestração da pipeline e lógica de negócio.
-- **Database**: Persistência em PostgreSQL usando SQLAlchemy (Async).
+## Como rodar com Docker
 
-## 🚀 Como Rodar
+1. Copie o arquivo de exemplo:
 
-### Com Docker (Recomendado)
+```bash
+cp .env.example .env
+```
 
-1. Configure o arquivo `.env` (use o `.env.example` como base).
-2. Suba os containers:
-   ```bash
-   docker-compose up -d --build
-   ```
+2. Ajuste as variaveis no `.env`.
 
-### Localmente (Desenvolvimento)
+3. Suba os containers:
 
-1. Crie um ambiente virtual e instale as dependências:
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # No Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-2. Inicie a API:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-3. Ou rode a pipeline via CLI:
-   ```bash
-   python -m app.main 2026-05-12
-   ```
+```bash
+docker-compose up -d --build
+```
 
-## 🔌 API Endpoints (Principais)
+4. Acesse:
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `GET`  | `/api/v1/edicoes/` | Timeline de edições processadas |
-| `GET`  | `/api/v1/edicoes/data/{data}` | Detalhes da edição por data |
-| `GET`  | `/api/v1/materias/search/` | Busca avançada por termo, órgão e data |
-| `GET`  | `/api/v1/materias/estatisticas/tipos`| Distribuição de tipos documentais |
-| `POST` | `/api/v1/tasks/jobs/{id}/run` | Aciona pipeline ou stats manualmente |
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:8000`
+- Swagger: `http://localhost:8000/docs`
 
-### Endpoints administrativos
+## Como rodar localmente
 
-Endpoints que disparam coletas ou jobs manuais exigem o header `X-Admin-API-Key`
-quando `ADMIN_API_KEY` estiver configurada. Em `APP_ENV=production`, a API recusa
-esses endpoints se `ADMIN_API_KEY` estiver vazia.
+### Backend
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## Variaveis de ambiente
+
+Principais variaveis do `.env`:
+
+```env
+APP_ENV=development
+DEBUG=True
+ADMIN_API_KEY=
+
+POSTGRES_USER=monitor_dool_user
+POSTGRES_PASSWORD=your_secure_password_here
+POSTGRES_DB=monitor_dool_db
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+
+DOOL_BASE_URL=https://dool.egba.ba.gov.br
+DOOL_TIMEOUT=120
+DOOL_MAX_CONCURRENCY=20
+
+SCHEDULER_ENABLED=True
+SCHEDULER_TIMEZONE=America/Sao_Paulo
+SCHEDULER_COLLECTION_HOUR=8
+SCHEDULER_COLLECTION_MINUTE=0
+SCHEDULER_BACKUP_HOUR=12
+SCHEDULER_BACKUP_MINUTE=0
+SCHEDULER_STATS_INTERVAL_HOURS=6
+```
+
+No frontend, a URL da API e definida por:
+
+```env
+VITE_API_URL=http://localhost:8000/api/v1
+```
+
+## Endpoints principais
+
+| Metodo | Endpoint | Descricao |
+| --- | --- | --- |
+| `GET` | `/api/v1/edicoes/` | Lista edicoes coletadas |
+| `GET` | `/api/v1/edicoes/data/{data}` | Busca edicao por data |
+| `GET` | `/api/v1/materias/` | Lista materias paginadas |
+| `GET` | `/api/v1/materias/search/` | Busca com filtros |
+| `GET` | `/api/v1/materias/{id}` | Detalhe completo da materia |
+| `GET` | `/api/v1/materias/{id}/pdf` | Download do PDF quando disponivel |
+| `GET` | `/api/v1/materias/filtros` | Opcoes enxutas de filtros |
+| `GET` | `/api/v1/materias/estatisticas/resumo` | Resumo da dashboard |
+| `POST` | `/api/v1/tasks/coleta/{data}` | Dispara coleta manual |
+| `POST` | `/api/v1/tasks/jobs/{id}/run` | Executa job agendado manualmente |
+
+## Endpoints administrativos
+
+Endpoints que disparam coletas ou jobs manuais exigem o header `X-Admin-API-Key` quando `ADMIN_API_KEY` estiver configurada.
+
+Em `APP_ENV=production`, a API recusa esses endpoints se `ADMIN_API_KEY` estiver vazia.
 
 Exemplo:
 
@@ -79,29 +175,59 @@ curl -X POST \
 
 O scheduler interno continua executando as coletas programadas sem depender desse header.
 
-### Scheduler
+## Decisoes tecnicas
 
-A coleta automÃ¡tica Ã© feita pelo backend via APScheduler. Os horÃ¡rios podem ser
-ajustados pelo `.env`:
+### Coleta e scheduler
 
-```env
-SCHEDULER_ENABLED=True
-SCHEDULER_TIMEZONE=America/Sao_Paulo
-SCHEDULER_COLLECTION_HOUR=8
-SCHEDULER_COLLECTION_MINUTE=0
-SCHEDULER_BACKUP_HOUR=12
-SCHEDULER_BACKUP_MINUTE=0
-SCHEDULER_STATS_INTERVAL_HOURS=6
+A coleta automatica fica no backend via APScheduler. O frontend nao dispara coleta automaticamente ao abrir a dashboard, evitando spam de requisicoes e toasts quando a edicao do dia ainda nao foi publicada.
+
+### Estado por URL
+
+Busca, filtros e pagina da timeline sao refletidos na URL. Isso permite refresh, compartilhamento de estado e retorno da pagina de detalhe sem perder contexto.
+
+### HTML rico e sanitizacao
+
+As materias podem vir com HTML rico. O frontend sanitiza o conteudo antes de renderizar, preservando tabelas e links seguros. Tabelas recebem wrapper com scroll horizontal para manter responsividade.
+
+### PDF condicional
+
+O botao de download aparece somente quando o backend identifica PDF disponivel. O endpoint valida content-type, assinatura `%PDF-` ou marcadores internos antes de retornar o arquivo.
+
+### Performance
+
+As paginas principais sao carregadas com lazy loading por rota, reduzindo o bundle inicial.
+
+## Validacao
+
+### Backend
+
+```bash
+backend\venv\Scripts\pytest.exe backend\tests -p no:cacheprovider
+python -m compileall backend\app
 ```
 
-Em produÃ§Ã£o, mantenha o scheduler ativo em apenas uma instÃ¢ncia da API para evitar
-coletas concorrentes.
+### Frontend
 
-## 🛠️ Tecnologias
+```bash
+cd frontend
+npm run test
+npm run lint
+npm run build
+```
 
-- **FastAPI**
-- **SQLAlchemy 2.0 (Async)**
-- **Alembic** (Migrações)
-- **Selectolax** (HTML Parsing ultra-rápido)
-- **Httpx** (Client HTTP Async)
-- **PostgreSQL**
+## Fluxo de demo sugerido
+
+1. Abrir a dashboard.
+2. Buscar por `decreto`.
+3. Navegar pela paginacao.
+4. Abrir uma materia.
+5. Voltar e confirmar que busca/pagina foram preservadas.
+6. Abrir o historico de edicoes.
+7. Filtrar a timeline por uma edicao especifica.
+8. Abrir uma materia com tabela.
+9. Demonstrar download de PDF quando disponivel.
+10. Mostrar Swagger e endpoints administrativos protegidos.
+
+## Status
+
+O projeto esta pronto para demonstracao tecnica em portfolio, com frontend responsivo, backend com scheduler, seguranca basica para jobs administrativos e testes automatizados cobrindo os fluxos mais sensiveis.
