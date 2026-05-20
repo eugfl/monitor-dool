@@ -13,7 +13,7 @@ import {
   MateriaLoadingState,
   MateriaNotFoundState,
 } from '@/components/materia/MateriaPageState';
-import { MateriaSidebar } from '@/components/materia/MateriaSidebar';
+import { MateriaSupportCards } from '@/components/materia/MateriaSupportCards';
 import { MateriaService, getApiErrorMessage } from '@/services/api';
 import type { Materia } from '@/types';
 
@@ -103,14 +103,23 @@ export function MateriaDetail() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Card className="space-y-8 border-primary/10 p-6 shadow-sm md:p-8">
-          <MateriaHeader materia={materia} />
-          <MateriaContent html={materia.conteudo_html} text={materia.texto} />
-        </Card>
+      <Card className="border-primary/10 p-6 shadow-sm md:p-8">
+        <MateriaHeader materia={materia} />
+      </Card>
 
-        <MateriaSidebar materia={materia} />
-      </div>
+      <MateriaSupportCards materia={materia} />
+
+      <Card className="border-primary/10 shadow-sm">
+        <div className="border-b px-6 py-4 md:px-8">
+          <h2 className="text-lg font-heading font-bold">Conteúdo da matéria</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Área de leitura com rolagem própria para publicações extensas.
+          </p>
+        </div>
+        <div className="p-6 md:max-h-[calc(100vh-220px)] md:overflow-y-auto md:p-8">
+          <MateriaContent html={materia.conteudo_html} text={materia.texto} />
+        </div>
+      </Card>
     </motion.div>
   );
 }

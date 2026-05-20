@@ -18,14 +18,37 @@ function looksLikeRawContent(value?: string | null) {
   return sample.trimStart().startsWith('%PDF-') || markers >= 3;
 }
 
+function prepareMateriaHtml(html: string) {
+  const sanitized = DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+    ADD_ATTR: ['target'],
+  });
+
+  const document = new DOMParser().parseFromString(sanitized, 'text/html');
+
+  document.querySelectorAll('a[target="_blank"]').forEach((link) => {
+    link.setAttribute('rel', 'noopener noreferrer');
+  });
+
+  document.querySelectorAll('table').forEach((table) => {
+    if (table.parentElement?.classList.contains('materia-table-scroll')) return;
+
+    table.classList.add('materia-table');
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'materia-table-scroll';
+    table.parentNode?.insertBefore(wrapper, table);
+    wrapper.appendChild(table);
+  });
+
+  return document.body.innerHTML;
+}
+
 export function MateriaContent({ html, text }: MateriaContentProps) {
   const sanitizedHtml = useMemo(() => {
     if (!html || looksLikeRawContent(html)) return null;
 
-    return DOMPurify.sanitize(html, {
-      USE_PROFILES: { html: true },
-      ADD_ATTR: ['target'],
-    });
+    return prepareMateriaHtml(html);
   }, [html]);
 
   const hasRawText = looksLikeRawContent(text);

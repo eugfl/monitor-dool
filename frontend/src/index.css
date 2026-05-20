@@ -93,26 +93,86 @@
 
 /* Materia Content Typography */
 .materia-content {
-  @apply max-w-full overflow-x-auto;
+  @apply max-w-full text-foreground;
 }
-.materia-content table {
-  @apply my-6 min-w-full border-collapse text-sm;
+.materia-content > div {
+  @apply space-y-4;
 }
-.materia-content th, .materia-content td {
-  @apply border border-border p-3 text-left align-top;
+.materia-content h1,
+.materia-content h2,
+.materia-content h3,
+.materia-content h4 {
+  @apply mt-6 font-heading font-bold leading-tight text-foreground;
 }
-.materia-content th {
-  @apply bg-muted font-bold text-foreground;
+.materia-content h1 {
+  @apply text-2xl;
 }
-.materia-content tr:nth-child(even) {
-  @apply bg-muted/30;
+.materia-content h2 {
+  @apply text-xl;
 }
-.materia-content caption {
-  @apply mb-3 text-left text-sm font-semibold text-muted-foreground;
+.materia-content h3,
+.materia-content h4 {
+  @apply text-lg;
+}
+.materia-content p,
+.materia-content div:not(.materia-table-scroll) {
+  @apply leading-relaxed;
 }
 .materia-content p {
-  @apply mb-4 leading-relaxed;
+  @apply mb-4;
 }
-.materia-content b, .materia-content strong {
+.materia-content ul,
+.materia-content ol {
+  @apply my-4 space-y-2 pl-6;
+}
+.materia-content ul {
+  @apply list-disc;
+}
+.materia-content ol {
+  @apply list-decimal;
+}
+.materia-content a {
+  @apply font-medium text-primary underline-offset-4 hover:underline;
+}
+.materia-content b,
+.materia-content strong {
   @apply font-bold text-foreground;
+}
+.materia-table-scroll {
+  @apply my-6 w-full overflow-x-auto rounded-lg border bg-card shadow-sm;
+}
+.materia-content table,
+.materia-content .materia-table {
+  @apply w-full min-w-[720px] border-collapse text-sm;
+}
+.materia-content th,
+.materia-content td {
+  @apply border-b border-r border-border px-4 py-3 text-left align-top;
+}
+.materia-content th:last-child,
+.materia-content td:last-child {
+  @apply border-r-0;
+}
+.materia-content th {
+  @apply bg-muted/80 text-xs font-bold uppercase tracking-wide text-muted-foreground;
+}
+.materia-content tbody tr,
+.materia-content tr {
+  @apply transition-colors;
+}
+.materia-content tbody tr:hover,
+.materia-content tr:hover {
+  @apply bg-primary/5;
+}
+.materia-content tr:nth-child(even) td {
+  @apply bg-muted/20;
+}
+.materia-content caption {
+  @apply px-4 py-3 text-left text-sm font-semibold text-muted-foreground;
+}
+.materia-content img {
+  @apply my-4 max-w-full rounded-md border;
+}
+.materia-content hr {
+  @apply my-6 border-border;
 }
