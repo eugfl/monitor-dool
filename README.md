@@ -63,6 +63,22 @@ graph TD
 | `GET`  | `/api/v1/materias/estatisticas/tipos`| Distribuição de tipos documentais |
 | `POST` | `/api/v1/tasks/jobs/{id}/run` | Aciona pipeline ou stats manualmente |
 
+### Endpoints administrativos
+
+Endpoints que disparam coletas ou jobs manuais exigem o header `X-Admin-API-Key`
+quando `ADMIN_API_KEY` estiver configurada. Em `APP_ENV=production`, a API recusa
+esses endpoints se `ADMIN_API_KEY` estiver vazia.
+
+Exemplo:
+
+```bash
+curl -X POST \
+  -H "X-Admin-API-Key: sua-chave-forte" \
+  "http://localhost:8000/api/v1/tasks/coleta/2026-05-20"
+```
+
+O scheduler interno continua executando as coletas programadas sem depender desse header.
+
 ## 🛠️ Tecnologias
 
 - **FastAPI**
