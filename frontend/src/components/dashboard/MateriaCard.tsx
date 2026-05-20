@@ -60,7 +60,7 @@ export function MateriaCard({ materia, idx }: MateriaCardProps) {
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-bold text-muted-foreground/90 flex items-center gap-1">
             <span className="text-primary opacity-60">🏛️</span> 
-            {materia.orgao || 'Secretaria Geral'}
+            {materia.orgao || 'Órgão não identificado'}
           </span>
         </div>
         <span className="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 cursor-pointer">
