@@ -43,7 +43,7 @@ export function Filters({
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
           <Input
             placeholder="Pesquisar por órgão, pessoa, empresa, decreto..."
-            className="h-10 bg-muted/30 pl-10"
+            className="h-11 bg-muted/30 pl-10"
             value={filters.q}
             onChange={(e) => updateFilter('q', e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onApply()}
@@ -54,7 +54,7 @@ export function Filters({
           <Button
             type="button"
             variant="outline"
-            className="h-10 flex-1 gap-2 md:flex-none"
+            className="h-11 flex-1 gap-2 md:h-10 md:flex-none"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             <Filter className="h-4 w-4" />
@@ -62,7 +62,7 @@ export function Filters({
             {hasActiveFilters && <span className="h-2 w-2 rounded-full bg-primary" />}
           </Button>
 
-          <Button type="button" className="h-10 flex-1 px-6 font-bold md:flex-none" onClick={onApply} disabled={isLoading}>
+          <Button type="button" className="h-11 flex-1 px-6 font-bold md:h-10 md:flex-none" onClick={onApply} disabled={isLoading}>
             {isLoading ? 'Buscando...' : 'Buscar'}
           </Button>
         </div>
@@ -80,7 +80,7 @@ export function Filters({
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipo</label>
                 <Select value={filters.tipo} onValueChange={(v) => updateFilter('tipo', v)}>
-                  <SelectTrigger className="h-10 bg-card">
+                  <SelectTrigger className="bg-card">
                     <SelectValue placeholder="Todos os tipos" />
                   </SelectTrigger>
                   <SelectContent>
@@ -97,7 +97,7 @@ export function Filters({
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Período</label>
                 <Select value={filters.dateMode} onValueChange={(v) => updateFilter('dateMode', v)}>
-                  <SelectTrigger className="h-10 bg-card">
+                  <SelectTrigger className="bg-card">
                     <SelectValue placeholder="Tipo de busca" />
                   </SelectTrigger>
                   <SelectContent>
@@ -118,7 +118,7 @@ export function Filters({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-10 justify-center text-xs font-bold text-muted-foreground hover:text-destructive"
+                className="h-11 justify-center text-xs font-bold text-muted-foreground hover:text-destructive md:h-10"
                 onClick={(event) => {
                   event.preventDefault();
                   resetFilters();
@@ -141,7 +141,7 @@ function DateInput({ value, onChange }: { value: string; onChange: (value: strin
       <Calendar className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
       <input
         type="date"
-        className="h-10 w-full rounded-md border border-input bg-card pl-8 pr-2 text-xs outline-none focus:ring-1 focus:ring-primary"
+        className="h-11 w-full rounded-md border border-input bg-card pl-8 pr-2 text-xs outline-none focus:ring-1 focus:ring-primary md:h-10"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

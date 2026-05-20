@@ -39,7 +39,7 @@ export function TimelineSection({
   onPageChange,
 }: TimelineSectionProps) {
   return (
-    <section className="flex h-[750px] flex-col rounded-xl border bg-card shadow-sm">
+    <section className="flex h-[calc(100vh-120px)] min-h-[560px] flex-col rounded-xl border bg-card shadow-sm lg:h-[750px]">
       <div className="flex shrink-0 items-center justify-between border-b p-6">
         <h2 className="flex items-center gap-2 text-xl font-heading font-semibold">
           <span className="h-6 w-1.5 rounded-full bg-primary" />
@@ -81,7 +81,7 @@ export function TimelineSection({
             size="sm"
             disabled={currentPage === 1}
             onClick={() => onPageChange(currentPage - 1)}
-            className="h-9 gap-1 text-xs font-bold"
+            className="h-11 gap-1 text-xs font-bold sm:h-9"
           >
             <ChevronLeft className="h-4 w-4" />
             Anterior
@@ -96,7 +96,7 @@ export function TimelineSection({
             size="sm"
             disabled={!hasNextPage}
             onClick={() => onPageChange(currentPage + 1)}
-            className="h-9 gap-1 text-xs font-bold"
+            className="h-11 gap-1 text-xs font-bold sm:h-9"
           >
             Próxima
             <ChevronRight className="h-4 w-4" />
