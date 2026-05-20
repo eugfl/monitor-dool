@@ -52,6 +52,7 @@ export function Filters({
 
         <div className="flex items-center gap-2">
           <Button
+            type="button"
             variant="outline"
             className="h-10 flex-1 gap-2 md:flex-none"
             onClick={() => setIsExpanded(!isExpanded)}
@@ -61,7 +62,7 @@ export function Filters({
             {hasActiveFilters && <span className="h-2 w-2 rounded-full bg-primary" />}
           </Button>
 
-          <Button className="h-10 flex-1 px-6 font-bold md:flex-none" onClick={onApply} disabled={isLoading}>
+          <Button type="button" className="h-10 flex-1 px-6 font-bold md:flex-none" onClick={onApply} disabled={isLoading}>
             {isLoading ? 'Buscando...' : 'Buscar'}
           </Button>
         </div>
@@ -114,10 +115,14 @@ export function Filters({
               </div>
 
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 className="h-10 justify-center text-xs font-bold text-muted-foreground hover:text-destructive"
-                onClick={resetFilters}
+                onClick={(event) => {
+                  event.preventDefault();
+                  resetFilters();
+                }}
               >
                 <X className="mr-1 h-3.5 w-3.5" />
                 Limpar

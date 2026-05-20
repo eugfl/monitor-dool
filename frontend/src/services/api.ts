@@ -79,19 +79,11 @@ export function getApiErrorMessage(error: unknown, fallback = 'Não foi possíve
   return fallback;
 }
 
-export function isApiNotFound(error: unknown) {
-  return axios.isAxiosError(error) && error.response?.status === 404;
-}
-
 export const EdicaoService = {
   getEdicoes: async (limit = 10, offset = 0) => {
     const response = await api.get<Edicao[]>('/edicoes/', {
       params: { limit, offset },
     });
-    return response.data;
-  },
-  getEdicaoByDate: async (date: string) => {
-    const response = await api.get<Edicao>(`/edicoes/data/${date}`);
     return response.data;
   },
 };

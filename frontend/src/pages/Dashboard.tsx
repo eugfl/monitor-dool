@@ -10,7 +10,7 @@ import { TimelineSection } from '@/components/dashboard/TimelineSection';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useDebounce } from '@/hooks/useDebounce';
 import { defaultFilters, type FilterState, useFilters } from '@/hooks/useFilters';
-import { EdicaoService, MateriaService, getApiErrorMessage, isApiNotFound } from '@/services/api';
+import { MateriaService, getApiErrorMessage } from '@/services/api';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const finalCollectionStatuses = new Set(['success', 'no_edition', 'failed']);
@@ -24,13 +24,15 @@ function getTodayISO() {
 
 function getFiltersFromSearchParams(searchParams: URLSearchParams): FilterState {
   const dateMode = searchParams.get('dateMode') === 'range' ? 'range' : 'single';
+  const dataInicio = searchParams.get('data_inicio') || defaultFilters.data_inicio;
+  const dataFim = searchParams.get('data_fim') || defaultFilters.data_fim;
 
   return {
     q: searchParams.get('q') || defaultFilters.q,
     tipo: searchParams.get('tipo') || defaultFilters.tipo,
     dateMode,
-    data_inicio: searchParams.get('data_inicio') || defaultFilters.data_inicio,
-    data_fim: searchParams.get('data_fim') || defaultFilters.data_fim,
+    data_inicio: dataInicio,
+    data_fim: dateMode === 'single' && dataInicio ? dataFim || dataInicio : dataFim,
   };
 }
 
@@ -91,10 +93,8 @@ export function Dashboard() {
   const filtersRef = useRef(filters);
   const currentPageRef = useRef(currentPage);
   const didRunSearchEffect = useRef(false);
-  const didCheckTodayCollection = useRef(false);
   const lastErrorToastRef = useRef<string | null>(null);
   const todayISO = getTodayISO();
-  const todayLabel = new Date(`${todayISO}T12:00:00`).toLocaleDateString('pt-BR');
 
   const hasDateFilter = !!filters.data_inicio;
   const hasActiveFilters = filters.q !== '' || filters.tipo !== 'all' || filters.data_inicio !== '' || filters.data_fim !== '';
@@ -155,6 +155,10 @@ export function Dashboard() {
     }
 
     const currentQ = searchParams.get('q') || '';
+    if (debouncedSearch !== filtersRef.current.q) {
+      return;
+    }
+
     if (debouncedSearch === currentQ) {
       return;
     }
@@ -176,7 +180,7 @@ export function Dashboard() {
     return null;
   }, []);
 
-  const collectEdition = useCallback(async (dataInicio: string, dataFim?: string, source: 'auto' | 'manual' = 'manual') => {
+  const collectEdition = useCallback(async (dataInicio: string, dataFim?: string) => {
     if (!dataInicio) return;
 
     const loadingToast = toast.loading(dataFim ? 'Coletando período selecionado...' : 'Coletando edição...');
@@ -188,11 +192,6 @@ export function Dashboard() {
       await refresh(filtersRef.current);
 
       toast.dismiss(loadingToast);
-
-      if (finalStatus?.status === 'no_edition' && source === 'auto') {
-        toast.info(`Hoje (${todayLabel}) não tivemos Diário Oficial. Exibindo edições anteriores.`);
-        return;
-      }
 
       if (!finalStatus) {
         toast.info('A coleta ainda está em andamento. A timeline foi atualizada com os dados disponíveis.');
@@ -215,34 +214,18 @@ export function Dashboard() {
     } finally {
       setIsCollecting(false);
     }
-  }, [refresh, todayLabel, waitForCollectionStatus]);
-
-  useEffect(() => {
-    if (didCheckTodayCollection.current) return;
-    didCheckTodayCollection.current = true;
-
-    async function ensureTodayEdition() {
-      try {
-        await EdicaoService.getEdicaoByDate(todayISO);
-      } catch (err) {
-        if (isApiNotFound(err)) {
-          await collectEdition(todayISO, undefined, 'auto');
-          return;
-        }
-
-        toast.error(getApiErrorMessage(err, 'Não foi possível verificar a edição de hoje.'));
-      }
-    }
-
-    ensureTodayEdition();
-  }, [collectEdition, todayISO]);
+  }, [refresh, waitForCollectionStatus]);
 
   const handleTriggerColeta = async () => {
-    await collectEdition(filters.data_inicio, filters.data_fim || undefined, 'manual');
+    await collectEdition(filters.data_inicio, filters.data_fim || undefined);
   };
 
   const handleResetFilters = () => {
+    filtersRef.current = defaultFilters;
+    currentPageRef.current = 1;
+    replaceFilters(defaultFilters);
     updateUrlState(defaultFilters, 1);
+    refresh(defaultFilters, 1);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -284,7 +267,7 @@ export function Dashboard() {
         isCollecting={isCollecting}
         onApplyFilters={handleApplyFilters}
         onCollectSelectedDate={handleTriggerColeta}
-        onCollectToday={() => collectEdition(todayISO, undefined, 'manual')}
+        onCollectToday={() => collectEdition(todayISO)}
         onResetFilters={handleResetFilters}
         onPageChange={handlePageChange}
       />
