@@ -79,6 +79,24 @@ curl -X POST \
 
 O scheduler interno continua executando as coletas programadas sem depender desse header.
 
+### Scheduler
+
+A coleta automÃ¡tica Ã© feita pelo backend via APScheduler. Os horÃ¡rios podem ser
+ajustados pelo `.env`:
+
+```env
+SCHEDULER_ENABLED=True
+SCHEDULER_TIMEZONE=America/Sao_Paulo
+SCHEDULER_COLLECTION_HOUR=8
+SCHEDULER_COLLECTION_MINUTE=0
+SCHEDULER_BACKUP_HOUR=12
+SCHEDULER_BACKUP_MINUTE=0
+SCHEDULER_STATS_INTERVAL_HOURS=6
+```
+
+Em produÃ§Ã£o, mantenha o scheduler ativo em apenas uma instÃ¢ncia da API para evitar
+coletas concorrentes.
+
 ## 🛠️ Tecnologias
 
 - **FastAPI**

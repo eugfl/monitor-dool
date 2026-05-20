@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 from typing import List
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -33,6 +34,22 @@ class Settings(BaseSettings):
     dool_base_url: str = "https://dool.egba.ba.gov.br"
     dool_timeout: int = 120
     dool_max_concurrency: int = 20
+
+    # Scheduler
+    scheduler_enabled: bool = True
+    scheduler_timezone: str = "America/Sao_Paulo"
+    scheduler_collection_hour: int = 8
+    scheduler_collection_minute: int = 0
+    scheduler_backup_hour: int = 12
+    scheduler_backup_minute: int = 0
+    scheduler_stats_interval_hours: int = 6
+
+    @property
+    def scheduler_tzinfo(self) -> ZoneInfo:
+        try:
+            return ZoneInfo(self.scheduler_timezone)
+        except ZoneInfoNotFoundError:
+            return ZoneInfo("America/Sao_Paulo")
 
     # CORS — lista separada por vírgulas no .env
     cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
